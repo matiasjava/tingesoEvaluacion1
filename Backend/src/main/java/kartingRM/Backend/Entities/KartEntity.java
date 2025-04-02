@@ -20,4 +20,5 @@ public class KartEntity {
     private Long id;
     private String model;
     private String status;
+    
 }
