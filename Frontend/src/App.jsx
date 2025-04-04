@@ -5,6 +5,8 @@ import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import Home from './views/Home/Home'
 import Contact from './views/Contact/Contact'
+import Karts from './views/Karts/Karts'
+import './App.css'
 
 function App() {
 
@@ -13,7 +15,8 @@ function App() {
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} /> 
-        <Route path="/contact" element={<Contact />} /> 
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/karts" element={<Karts />} /> 
       </Routes>
       </div>
   )

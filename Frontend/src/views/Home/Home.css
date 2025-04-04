@@ -1,0 +1,32 @@
+.home-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    text-align: center;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 30px;
+    margin-left: 30px;
+  }
+  
+  .title {
+    margin-bottom: 20px;
+    color: #333;
+  }
+  
+  .calendar-container,
+  .time-container,
+  .form-container {
+    margin-top: 20px;
+  }
+  
+  .confirm-button {
+    margin-top: 20px;
+    background-color: #1976d2;
+    color: white;
+  }
+  
+  .confirm-button:hover {
+    background-color: #115293;
+  }

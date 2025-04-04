@@ -7,19 +7,21 @@ import lombok.NoArgsConstructor;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "karts")
+@Table(name = "users")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 
-public class KartEntity {
+public class UserEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(unique = true, nullable = false)
     private Long id;
-    private String code;
-    private String model;
-    private String status;
-    
+    private String name;
+    private String email;
+    private String phoneNumber;
+    private String category_frecuency = "No frecuente";
+    private int numberVisits = 0;
+
 }
