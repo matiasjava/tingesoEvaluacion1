@@ -6,6 +6,8 @@ import viteLogo from '/vite.svg'
 import Home from './views/Home/Home'
 import Contact from './views/Contact/Contact'
 import Karts from './views/Karts/Karts'
+import Prices from './views/Prices/Prices'
+import Formulario from './views/Forms/Formulario'
 import './App.css'
 
 function App() {
@@ -17,6 +19,8 @@ function App() {
         <Route path="/" element={<Home />} /> 
         <Route path="/contact" element={<Contact />} />
         <Route path="/karts" element={<Karts />} /> 
+        <Route path="/prices" element={<Prices />} />
+        <Route path="/formulario" element={<Formulario />} />
       </Routes>
       </div>
   )

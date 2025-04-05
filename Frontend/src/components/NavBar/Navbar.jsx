@@ -23,6 +23,9 @@ export const Navbar = () => {
           <li>
             <NavLink to="/contact">Contacto</NavLink>
           </li>
+          <li>
+            <NavLink to="/prices">Precios</NavLink>
+          </li>
         </ul>
       </nav>
     );

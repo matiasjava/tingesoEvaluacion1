@@ -1,5 +1,13 @@
+html, body {
+  background-color: #0c0820; 
+  margin: 0; 
+  padding: 0; 
+  height: 100%; 
+  width: 100%; 
+}
+
 .App {
-    background-color: #0c0820;
-    height: 100vh;
-    width: 100%;
-  }
+  background-color: #0c0820; 
+  min-height: 100vh; 
+  width: 100%; 
+}
