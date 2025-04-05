@@ -54,6 +54,10 @@ const Home = () => {
       const time = currentTime.format('HH:mm');
       const endTime = currentTime.add(durationMinutes, 'minute');
   
+      if (endTime.hour() > endHour || (endTime.hour() === endHour && endTime.minute() > 0)) {
+        break; 
+      }
+  
       const esInvalido = reservasDelDia.some((reserva) => {
         const reservaInicio = dayjs(`${reserva.fecha_reserva}T${reserva.hora_inicio}`, 'YYYY-MM-DDTHH:mm');
         const reservaFin = dayjs(`${reserva.fecha_reserva}T${reserva.hora_fin}`, 'YYYY-MM-DDTHH:mm');
