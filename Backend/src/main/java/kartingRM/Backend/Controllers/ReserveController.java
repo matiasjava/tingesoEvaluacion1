@@ -1,6 +1,8 @@
 package kartingRM.Backend.Controllers;
 
+import kartingRM.Backend.Entities.ReserveDetailsEntity;
 import kartingRM.Backend.Entities.ReserveEntity;
+import kartingRM.Backend.Services.ReserveDetailsService;
 import kartingRM.Backend.Services.ReserveService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +16,28 @@ public class ReserveController {
 
     @Autowired
     private ReserveService reserveService;
+
+    @Autowired
+    private ReserveDetailsService reserveDetailsService;
+
+    @PostMapping("/confirmar")
+    public void confirmarReserva(@RequestBody ReserveEntity reserva) {
+        if (reserva.getCliente() == null || reserva.getCliente().getId() == null) {
+            throw new RuntimeException("El cliente es obligatorio para confirmar la reserva.");
+        }
+
+        if (reserva.getDetalles() == null || reserva.getDetalles().isEmpty()) {
+            throw new RuntimeException("Debe incluir al menos un detalle en la reserva.");
+        }
+
+        for (ReserveDetailsEntity detalle : reserva.getDetalles()) {
+            if (detalle.getMemberName() == null || detalle.getDateBirthday() == null) {
+                throw new RuntimeException("Cada detalle debe incluir un nombre y una fecha de cumpleaños.");
+            }
+        }
+
+        reserveService.saveReserve(reserva);
+    }
 
     @GetMapping("/")
     public List<ReserveEntity> getAllReserves() {

@@ -19,11 +19,11 @@ const Home = () => {
   const handleContinue = () => {
     const tipoDuracion =
       selectedDuration === "30"
-        ? "10 vueltas o máx 10 min"
+        ? "10 vueltas"
         : selectedDuration === "35"
-        ? "15 vueltas o máx 15 min"
-        : "20 vueltas o máx 20 min";
-  
+        ? "15 vueltas"
+        : "20 vueltas";
+
     navigate('/formulario', {
       state: {
         dia: selectedDate.format('YYYY-MM-DD'),
@@ -32,7 +32,7 @@ const Home = () => {
         tipoDuracion,
       },
     });
-  };
+};
 
   const calculateAvailableTimes = () => {
     if (!selectedDate || !selectedDuration) return;
@@ -53,7 +53,7 @@ const Home = () => {
     while (currentTime.hour() < endHour || (currentTime.hour() === endHour && currentTime.minute() === 0)) {
       const time = currentTime.format('HH:mm');
       const endTime = currentTime.add(durationMinutes, 'minute');
-  
+
       if (endTime.hour() > endHour || (endTime.hour() === endHour && endTime.minute() > 0)) {
         break; 
       }

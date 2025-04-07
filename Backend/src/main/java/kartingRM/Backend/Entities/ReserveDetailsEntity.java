@@ -1,0 +1,45 @@
+package kartingRM.Backend.Entities;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.sql.Date;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
+
+@Entity
+@Table(name = "reserve_details")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class ReserveDetailsEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String memberName;
+
+    private Date dateBirthday;
+
+    private double montoFinal;
+
+    private double discount;
+
+    @ManyToOne
+    @JoinColumn(name = "reserve_id", nullable = false)
+    private ReserveEntity reserve;
+
+    public boolean isCumpleanos(LocalDate fechaUso) {
+        if (this.dateBirthday == null) {
+            return false;
+        }
+        LocalDate birthdayLocalDate = this.dateBirthday.toLocalDate();
+        return birthdayLocalDate.getMonth() == fechaUso.getMonth() &&
+               birthdayLocalDate.getDayOfMonth() == fechaUso.getDayOfMonth();
+    }
+}
+

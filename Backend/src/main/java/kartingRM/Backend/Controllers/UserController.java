@@ -3,6 +3,8 @@ package kartingRM.Backend.Controllers;
 import kartingRM.Backend.Entities.UserEntity;
 import kartingRM.Backend.Services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -10,7 +12,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/users")
 @CrossOrigin("*")
-
 public class UserController {
     @Autowired
     private UserService userService;
@@ -43,5 +44,12 @@ public class UserController {
         return userService.incrementVisitsAndUpdateCategory(userId);
     }
 
-    
+    @GetMapping("/findByRut/{rut}")
+    public ResponseEntity<UserEntity> getUserByRut(@PathVariable String rut) {
+        UserEntity user = userService.getUserByRut(rut);
+        if (user == null) {
+            return ResponseEntity.status(404).body(null);
+        }
+        return ResponseEntity.ok(user);
+    }
 }

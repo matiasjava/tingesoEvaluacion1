@@ -95,8 +95,28 @@ public class UserService {
 
     public UserEntity getUserById(long id) { return userRepository.findById(id).get(); }
 
+    public Optional<UserEntity> findUserByRut(String rut) {
+        return userRepository.findByRut(rut);
+    }
+
+
+    public UserEntity incrementVisits(String rut) {
+        Optional<UserEntity> optionalUser = findUserByRut(rut);
+        if (optionalUser.isPresent()) {
+            UserEntity user = optionalUser.get();
+            user.setNumberVisits(user.getNumberVisits() + 1);
+            return userRepository.save(user);
+        } else {
+            throw new RuntimeException("Usuario no encontrado con RUT: " + rut);
+        }
+    }
+
     public UserEntity saveUser(UserEntity user) {
         return userRepository.save(user);
+    }
+
+    public UserEntity getUserByRut(String rut) {
+        return userRepository.findByRut(rut).orElse(null); 
     }
 
 }

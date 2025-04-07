@@ -19,6 +19,7 @@ public class KartController {
     public List<KartEntity> getAllKarts() {
         return kartService.getAllKarts();
     }
+
     @GetMapping("/{id}")
     public KartEntity getKartById(@PathVariable("id") long id) {
         return kartService.getKartById(id);
