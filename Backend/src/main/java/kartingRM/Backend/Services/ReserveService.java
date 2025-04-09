@@ -32,13 +32,20 @@ public class ReserveService {
     }
 
     public ReserveEntity saveReserve(ReserveEntity reserve) {
-    if (reserve.getDetalles() != null) {
-        for (ReserveDetailsEntity detalle : reserve.getDetalles()) {
-            detalle.setReserve(reserve);
+        if (reserve.getDetalles() != null) {
+            for (ReserveDetailsEntity detalle : reserve.getDetalles()) {
+                detalle.setReserve(reserve);
+            }
         }
-    }
 
-    return reserveRepository.save(reserve);
+        String vueltasOTiempo = reserve.getVueltas_o_tiempo();
+        LocalDate fechaUso = reserve.getFecha_uso();
+        int cantidadPersonas = reserve.getCantidad_personas();
+
+        double montoFinal = calcularTarifaBase(vueltasOTiempo, fechaUso, cantidadPersonas);
+        reserve.setMontoFinal(montoFinal); 
+
+        return reserveRepository.save(reserve);
     }
 
     public ReserveEntity updateReserve(Long id, ReserveEntity reserve) {
@@ -67,31 +74,41 @@ public class ReserveService {
         return diasFeriados.contains(fecha);
     } 
 
-    public double calcularTarifaBase(String vueltasOTiempo, LocalDate fechaUso) {
+    public double calcularTarifaBase(String vueltasOTiempo, LocalDate fechaUso, int cantidadPersonas) {
         double tarifaBase;
+        int duracionMaxima;
+
+        // Determinar tarifa base y duración máxima
         switch (vueltasOTiempo) {
             case "10 vueltas":
             case "10 minutos":
                 tarifaBase = 15000;
+                duracionMaxima = 30; // minutos
                 break;
             case "15 vueltas":
             case "15 minutos":
                 tarifaBase = 20000;
+                duracionMaxima = 35; // minutos
                 break;
             case "20 vueltas":
             case "20 minutos":
                 tarifaBase = 25000;
+                duracionMaxima = 40; // minutos
                 break;
             default:
                 throw new IllegalArgumentException("Vueltas o tiempo no válido");
         }
 
-        
+        // Aplicar recargo por fin de semana o día feriado
         if (esFinDeSemana(fechaUso) || esDiaFeriado(fechaUso)) {
             tarifaBase *= 1.2;
         }
 
-        return tarifaBase;
+        // Calcular descuento por cantidad de personas
+        double descuento = calcularDescuentoGrupo(cantidadPersonas);
+        double montoFinal = tarifaBase * (1 - descuento);
+
+            return montoFinal;
     }
 
     
