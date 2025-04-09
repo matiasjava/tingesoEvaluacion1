@@ -7,7 +7,10 @@ import kartingRM.Backend.Services.ReserveService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/reserves")
@@ -40,8 +43,14 @@ public class ReserveController {
     }
 
     @GetMapping("/")
-    public List<ReserveEntity> getAllReserves() {
-        return reserveService.getAllReserves();
+    public List<Map<String, String>> getAllReserves() {
+        return reserveService.getAllReserves().stream().map(reserve -> {
+            Map<String, String> formattedReserve = new HashMap<>();
+            formattedReserve.put("fecha_reserva", reserve.getFecha_uso().toString()); // Ajusta según el nombre real del campo
+            formattedReserve.put("hora_inicio", reserve.getHora_inicio()); // Ajusta según el nombre real del campo
+            formattedReserve.put("hora_fin", reserve.getHora_fin()); // Ajusta según el nombre real del campo
+            return formattedReserve;
+        }).collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")

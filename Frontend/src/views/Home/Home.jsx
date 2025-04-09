@@ -34,46 +34,62 @@ const Home = () => {
     });
 };
 
-  const calculateAvailableTimes = () => {
-    if (!selectedDate || !selectedDuration) return;
-  
-    const isWeekend = [0, 6].includes(selectedDate.day());
-    const startHour = isWeekend ? 10 : 14;
-    const endHour = 22;
-  
-    const durationMinutes = parseInt(selectedDuration);
-  
-    const reservasDelDia = reservas.filter((reserva) =>
-      dayjs(reserva.fecha_reserva).isSame(selectedDate, 'day')
-    );
-  
-    const horariosConDisponibilidad = [];
-    let currentTime = dayjs(selectedDate).hour(startHour).minute(0);
-  
-    while (currentTime.hour() < endHour || (currentTime.hour() === endHour && currentTime.minute() === 0)) {
-      const time = currentTime.format('HH:mm');
-      const endTime = currentTime.add(durationMinutes, 'minute');
+const calculateAvailableTimes = () => {
+  if (!selectedDate || !selectedDuration) return;
 
-      if (endTime.hour() > endHour || (endTime.hour() === endHour && endTime.minute() > 0)) {
-        break; 
-      }
-  
-      const esInvalido = reservasDelDia.some((reserva) => {
-        const reservaInicio = dayjs(`${reserva.fecha_reserva}T${reserva.hora_inicio}`, 'YYYY-MM-DDTHH:mm');
-        const reservaFin = dayjs(`${reserva.fecha_reserva}T${reserva.hora_fin}`, 'YYYY-MM-DDTHH:mm');
-        return (
-          (currentTime.isAfter(reservaInicio) || currentTime.isSame(reservaInicio)) && currentTime.isBefore(reservaFin) || 
-          (endTime.isAfter(reservaInicio) && endTime.isBefore(reservaFin)) || 
-          (currentTime.isBefore(reservaInicio) && endTime.isAfter(reservaFin)) 
-        );
-      });
-  
-      horariosConDisponibilidad.push({ time, disponible: !esInvalido });
-      currentTime = currentTime.add(durationMinutes, 'minute');
+  const isWeekend = [0, 6].includes(selectedDate.day());
+  const startHour = isWeekend ? 10 : 14;
+  const endHour = 22;
+
+  const durationMinutes = parseInt(selectedDuration);
+
+  // Validar que reservas sea un array
+  const reservasDelDia = Array.isArray(reservas)
+    ? reservas.filter((reserva) =>
+        dayjs(reserva.fecha_reserva).isSame(selectedDate, 'day')
+      )
+    : [];
+
+  const horariosConDisponibilidad = [];
+  let currentTime = dayjs(selectedDate).hour(startHour).minute(0);
+
+  while (
+    currentTime.hour() < endHour ||
+    (currentTime.hour() === endHour && currentTime.minute() === 0)
+  ) {
+    const time = currentTime.format('HH:mm');
+    const endTime = currentTime.add(durationMinutes, 'minute');
+
+    if (
+      endTime.hour() > endHour ||
+      (endTime.hour() === endHour && endTime.minute() > 0)
+    ) {
+      break;
     }
-  
-    setAvailableTimes(horariosConDisponibilidad);
-  };
+
+    const esInvalido = reservasDelDia.some((reserva) => {
+      const reservaInicio = dayjs(
+        `${reserva.fecha_reserva}T${reserva.hora_inicio}`,
+        'YYYY-MM-DDTHH:mm'
+      );
+      const reservaFin = dayjs(
+        `${reserva.fecha_reserva}T${reserva.hora_fin}`,
+        'YYYY-MM-DDTHH:mm'
+      );
+      return (
+        (currentTime.isAfter(reservaInicio) || currentTime.isSame(reservaInicio)) &&
+        currentTime.isBefore(reservaFin) ||
+        (endTime.isAfter(reservaInicio) && endTime.isBefore(reservaFin)) ||
+        (currentTime.isBefore(reservaInicio) && endTime.isAfter(reservaFin))
+      );
+    });
+
+    horariosConDisponibilidad.push({ time, disponible: !esInvalido });
+    currentTime = currentTime.add(durationMinutes, 'minute');
+  }
+
+  setAvailableTimes(horariosConDisponibilidad);
+};
 
   
   useEffect(() => {

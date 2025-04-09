@@ -24,9 +24,9 @@ public class ReserveEntity {
 
     private LocalDate fecha_uso;
 
-    private LocalTime hora_inicio;
+    private String hora_inicio;
 
-    private LocalTime hora_fin;
+    private String hora_fin;
 
     @ManyToOne
     @JoinColumn(name = "cliente_id", nullable = false)
