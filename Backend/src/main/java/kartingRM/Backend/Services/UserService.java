@@ -93,8 +93,6 @@ public class UserService {
         return userRepository.findAll();
     }
 
-    public UserEntity getUserById(long id) { return userRepository.findById(id).get(); }
-
     public Optional<UserEntity> findUserByRut(String rut) {
         return userRepository.findByRut(rut);
     }
@@ -116,7 +114,53 @@ public class UserService {
     }
 
     public UserEntity getUserByRut(String rut) {
-        return userRepository.findByRut(rut).orElse(null); 
+        return userRepository.findByRut(rut).orElse(null);
     }
 
+    public double obtenerDescuentoPorCategoria(Long userId) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + userId));
+        String categoria = user.getCategory_frecuency();
+    
+        switch (categoria) {
+            case "Muy frecuente":
+                return 0.20; // 20%
+            case "Frecuente":
+                return 0.10; // 10%
+            case "Regular":
+                return 0.05; // 5%
+            default:
+                return 0.0; // No frecuente
+        }
+    }
+
+    public String obtenerCategoriaCliente(Long userId) {
+        if (userId == null) {
+            throw new IllegalArgumentException("El ID del usuario no puede ser nulo.");
+        }
+    
+        Optional<UserEntity> optionalUser = userRepository.findById(userId);
+    
+        if (optionalUser.isPresent()) {
+            UserEntity user = optionalUser.get();
+            int visits = user.getNumberVisits();
+    
+            if (visits >= 7) {
+                return "Muy frecuente";
+            } else if (visits >= 5) {
+                return "Frecuente";
+            } else if (visits >= 2) {
+                return "Regular";
+            } else {
+                return "No frecuente";
+            }
+        } else {
+            throw new RuntimeException("Usuario no encontrado con ID: " + userId);
+        }
+    }
+
+    public UserEntity findUserById(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + id));
+    }
 }

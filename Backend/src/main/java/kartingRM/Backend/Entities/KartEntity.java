@@ -2,8 +2,9 @@ package kartingRM.Backend.Entities;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
-
+import lombok.Setter;
 import jakarta.persistence.*;
 
 @Entity
@@ -11,7 +12,8 @@ import jakarta.persistence.*;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-
+@Getter
+@Setter
 public class KartEntity {
 
     @Id

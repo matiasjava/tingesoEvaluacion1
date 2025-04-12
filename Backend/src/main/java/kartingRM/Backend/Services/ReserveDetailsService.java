@@ -57,27 +57,4 @@ public class ReserveDetailsService {
                 return 0.0; // 0%
         }
     }
-
-    // Aplicar descuento por cumpleaños
-    public void aplicarDescuentoCumpleanos(List<ReserveDetailsEntity> detalles, LocalDate fechaUso) {
-        int cantidadPersonas = detalles.size();
-        int limiteDescuento = 0;
-    
-    
-        if (cantidadPersonas >= 3 && cantidadPersonas <= 5) {
-            limiteDescuento = 1;
-        } else if (cantidadPersonas >= 6 && cantidadPersonas <= 10) {
-            limiteDescuento = 2;
-        } else if (cantidadPersonas >= 11) {
-            limiteDescuento = 3;
-        }
-    
-        int descuentosAplicados = 0;
-        for (ReserveDetailsEntity detalle : detalles) {
-            if (detalle.isCumpleanos(fechaUso) && descuentosAplicados < limiteDescuento) {
-                detalle.setDiscount(0.50); 
-                descuentosAplicados++;
-            }
-        }
-    }
 }

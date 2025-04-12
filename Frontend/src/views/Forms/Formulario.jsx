@@ -33,49 +33,53 @@ const Formulario = () => {
     e.preventDefault();
   
     try {
-      // Verificar si hay al menos una persona en el array
       if (personas.length === 0) {
         alert('Debe ingresar al menos una persona.');
         return;
       }
   
-      // Usar los datos de la primera persona para verificar o crear el usuario
-      const personaPrincipal = personas[0];
-      if (!personaPrincipal.nombre || !personaPrincipal.rut || !personaPrincipal.email || !personaPrincipal.telefono) {
-        alert('Debe completar los datos del cliente principal (nombre, RUT, email y teléfono).');
-        return;
-      }
+      const participantesConUsuarios = await Promise.all(
+        personas.map(async (persona) => {
+          if (!persona.nombre || !persona.rut) {
+            throw new Error('Debe completar los datos de todos los participantes (nombre y RUT).');
+          }
   
-      let cliente = await getUserByRut(personaPrincipal.rut);
+          let usuario = await getUserByRut(persona.rut);
   
-      if (!cliente) {
-        // Crear el cliente si no existe
-        cliente = await createUser({
-          nombre: personaPrincipal.nombre,
-          rut: personaPrincipal.rut,
-          email: personaPrincipal.email,
-          telefono: personaPrincipal.telefono,
-        });
-      }
+          if (!usuario) {
+            // Crear el usuario si no existe
+            usuario = await createUser({
+              nombre: persona.nombre,
+              rut: persona.rut,
+              email: persona.email || '', // Opcional
+              telefono: persona.telefono || '', // Opcional
+            });
+          }
   
-      // Crear la reserva con el cliente asociado
+          return {
+            ...persona,
+            userId: usuario.id, // Asociar el userId al participante
+          };
+        })
+      );
+  
+      // Crear la reserva con los participantes asociados
       const reserva = {
         codigo_reserva: codigoReserva,
         fecha_uso: dia,
         hora_inicio: horaInicio,
         hora_fin: horaTermino,
         vueltas_o_tiempo: tipoDuracion,
-        cliente: { id: cliente.id }, // Asociar el cliente a la reserva
+        cliente: { id: participantesConUsuarios[0].userId }, // Cliente principal
         cantidad_personas: cantidadPersonas,
-        detalles: personas.map((persona) => ({
-          memberName: persona.nombre,
-          rut: persona.rut,
-          dateBirthday: persona.fechaCumpleanos,
+        detalles: participantesConUsuarios.map((participante) => ({
+          memberName: participante.nombre,
+          rut: participante.rut,
+          dateBirthday: participante.fechaCumpleanos,
+          userId: participante.userId, // Asociar el userId al detalle
         })),
       };
-  
       const response = await confirmReserve(reserva); // Confirmar la reserva
-      console.log('Reserva confirmada:', response);
       alert('Reserva confirmada exitosamente');
     } catch (error) {
       console.error('Error al confirmar la reserva:', error);

@@ -3,7 +3,9 @@ package kartingRM.Backend.Entities;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.sql.Date;
 import java.time.LocalDate;
@@ -15,8 +17,9 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 public class ReserveDetailsEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -33,13 +36,7 @@ public class ReserveDetailsEntity {
     @JoinColumn(name = "reserve_id", nullable = false)
     private ReserveEntity reserve;
 
-    public boolean isCumpleanos(LocalDate fechaUso) {
-        if (this.dateBirthday == null) {
-            return false;
-        }
-        LocalDate birthdayLocalDate = this.dateBirthday.toLocalDate();
-        return birthdayLocalDate.getMonth() == fechaUso.getMonth() &&
-               birthdayLocalDate.getDayOfMonth() == fechaUso.getDayOfMonth();
-    }
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
 }
 

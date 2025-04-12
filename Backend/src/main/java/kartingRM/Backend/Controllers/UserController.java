@@ -22,13 +22,18 @@ public class UserController {
     }
     @GetMapping("/{id}")
     public UserEntity getUserById(@PathVariable("id") long id) {
-        return userService.getUserById(id);
+        return userService.findUserById(id);
     }
 
     @PostMapping("/")
-    public UserEntity addUser(@RequestBody UserEntity user) {
-        return userService.saveUser(user);
+    public ResponseEntity<UserEntity> addUser(@RequestBody UserEntity user) {
+        if (user.getRut() == null || user.getRut().isEmpty()) {
+            return ResponseEntity.badRequest().body(null);
+        }
+        UserEntity savedUser = userService.saveUser(user);
+        return ResponseEntity.ok(savedUser);
     }
+
     @PutMapping("/{id}/update-category")
     public UserEntity updateCategoryFrequency(@PathVariable("id") Long userId) {
         return userService.updateCategoryFrequency(userId);
@@ -47,9 +52,10 @@ public class UserController {
     @GetMapping("/findByRut/{rut}")
     public ResponseEntity<UserEntity> getUserByRut(@PathVariable String rut) {
         UserEntity user = userService.getUserByRut(rut);
-        if (user == null) {
-            return ResponseEntity.status(404).body(null);
+        if (user != null) {
+            return ResponseEntity.ok(user);
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
-        return ResponseEntity.ok(user);
     }
 }
