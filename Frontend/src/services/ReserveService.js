@@ -3,6 +3,41 @@ import axios from 'axios';
 const API_URL = `${import.meta.env.VITE_PAYROLL_BACKEND_SERVER}/api/reserves/`;
 const USER_API_URL = `${import.meta.env.VITE_PAYROLL_BACKEND_SERVER}/api/users/`;
 
+export const processParticipants = async (personas) => {
+  try {
+    const participantesConUsuarios = await Promise.all(
+      personas.map(async (persona) => {
+        if (!persona.nombre || !persona.rut) {
+          throw new Error('Debe completar los datos de todos los participantes (nombre y RUT).');
+        }
+
+        let usuario = await getUserByRut(persona.rut);
+
+        if (!usuario) { //si no encuentra al usuario que lo cree
+          usuario = await createUser({
+            nombre: persona.nombre,
+            rut: persona.rut,
+            email: persona.email || '',
+            telefono: persona.telefono || '',
+          });
+        } else {
+          await incrementVisitsAndUpdateCategory(usuario.id);
+        }
+
+        return {
+          ...persona,
+          userId: usuario.id,
+        };
+      })
+    );
+
+    return participantesConUsuarios;
+  } catch (error) {
+    console.error('Error al procesar los participantes:', error);
+    throw error;
+  }
+};
+
 export const getReserves = async () => {
   try {
     const response = await axios.get(API_URL);
@@ -59,5 +94,15 @@ export const createUser = async (user) => {
   } catch (error) {
     console.error('Error creating user:', error);
     throw error;
+  }
+};
+
+export const incrementVisitsAndUpdateCategory = async (userId) => {
+  try {
+    const response = await axios.put(`${USER_API_URL}${userId}/increment-visits`);
+    return response.data; 
+  } catch (error) {
+    console.error('Error incrementando visitas y actualizando categoría:', error);
+    throw error; 
   }
 };

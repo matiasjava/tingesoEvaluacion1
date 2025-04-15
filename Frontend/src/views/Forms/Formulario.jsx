@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { confirmReserve, getUserByRut, createUser } from '../../services/ReserveService'; // Importar servicios
+import { processParticipants, confirmReserve, getUserByRut, createUser } from '../../services/ReserveService';
 import './Formulario.css';
 
 const Formulario = () => {
@@ -9,7 +9,6 @@ const Formulario = () => {
 
   const [cantidadPersonas, setCantidadPersonas] = useState(1);
   const [personas, setPersonas] = useState([]); 
-  const [codigoReserva, setCodigoReserva] = useState(''); 
 
   const handleCantidadChange = (e) => {
     const cantidad = parseInt(e.target.value);
@@ -38,48 +37,24 @@ const Formulario = () => {
         return;
       }
   
-      const participantesConUsuarios = await Promise.all(
-        personas.map(async (persona) => {
-          if (!persona.nombre || !persona.rut) {
-            throw new Error('Debe completar los datos de todos los participantes (nombre y RUT).');
-          }
-  
-          let usuario = await getUserByRut(persona.rut);
-  
-          if (!usuario) {
-            // Crear el usuario si no existe
-            usuario = await createUser({
-              nombre: persona.nombre,
-              rut: persona.rut,
-              email: persona.email || '', // Opcional
-              telefono: persona.telefono || '', // Opcional
-            });
-          }
-  
-          return {
-            ...persona,
-            userId: usuario.id, // Asociar el userId al participante
-          };
-        })
-      );
-  
-      // Crear la reserva con los participantes asociados
+      const participantesConUsuarios = await processParticipants(personas);
+
       const reserva = {
-        codigo_reserva: codigoReserva,
         fecha_uso: dia,
         hora_inicio: horaInicio,
         hora_fin: horaTermino,
         vueltas_o_tiempo: tipoDuracion,
-        cliente: { id: participantesConUsuarios[0].userId }, // Cliente principal
+        cliente: { id: participantesConUsuarios[0].userId }, 
         cantidad_personas: cantidadPersonas,
         detalles: participantesConUsuarios.map((participante) => ({
           memberName: participante.nombre,
           rut: participante.rut,
           dateBirthday: participante.fechaCumpleanos,
-          userId: participante.userId, // Asociar el userId al detalle
+          userId: participante.userId,
         })),
       };
-      const response = await confirmReserve(reserva); // Confirmar la reserva
+  
+      const response = await confirmReserve(reserva);
       alert('Reserva confirmada exitosamente');
     } catch (error) {
       console.error('Error al confirmar la reserva:', error);
@@ -92,16 +67,6 @@ const Formulario = () => {
       <div className="container">
         <h1>Datos de reserva</h1>
         <form onSubmit={handleSubmit}>
-          <div>
-            <label htmlFor="codigoReserva">Código de Reserva:</label>
-            <input
-              type="text"
-              id="codigoReserva"
-              value={codigoReserva}
-              onChange={(e) => setCodigoReserva(e.target.value)}
-              required
-            />
-          </div>
           <p><strong>Día:</strong> {dia}</p>
           <p><strong>Hora de Inicio:</strong> {horaInicio}</p>
           <p><strong>Hora de Término:</strong> {horaTermino}</p>

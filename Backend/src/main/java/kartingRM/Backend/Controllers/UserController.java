@@ -45,8 +45,13 @@ public class UserController {
     }
 
     @PutMapping("/{id}/increment-visits")
-    public UserEntity incrementVisitsAndUpdateCategory(@PathVariable("id") Long userId) {
-        return userService.incrementVisitsAndUpdateCategory(userId);
+    public ResponseEntity<?> incrementVisitsAndUpdateCategory(@PathVariable("id") Long userId) {
+        try {
+            UserEntity updatedUser = userService.incrementVisitsAndUpdateCategory(userId);
+            return ResponseEntity.ok(updatedUser); // Devuelve 200 OK con el usuario actualizado
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage()); // Devuelve 404 si el usuario no se encuentra
+        }
     }
 
     @GetMapping("/findByRut/{rut}")
