@@ -9,6 +9,7 @@ import Karts from './views/Karts/Karts'
 import Prices from './views/Prices/Prices'
 import Formulario from './views/Forms/Formulario'
 import Rack from './views/Rack/Rack'
+import Reports from './views/Reports/Reports'
 import './App.css'
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
         <Route path="/prices" element={<Prices />} />
         <Route path="/formulario" element={<Formulario />} />
         <Route path="/rack" element={<Rack />} />
+        <Route path="/reports" element={<Reports />} />
       </Routes>
       </div>
   )

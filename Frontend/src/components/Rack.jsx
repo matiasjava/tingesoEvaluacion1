@@ -5,11 +5,11 @@ import interactionPlugin from '@fullcalendar/interaction';
 
 const WeeklyCalendar = ({ events }) => {
     const renderEventContent = (eventInfo) => {
-        console.log('Contenido del evento:', eventInfo.event.extendedProps); // Verifica los datos aquí
+        console.log('Contenido del evento:', eventInfo.event.extendedProps); 
         return (
           <div>
-            <b>{eventInfo.timeText}</b> {/* Muestra la hora del evento */}
-            <div>{eventInfo.event.extendedProps.codigo_reserva}</div> {/* Muestra el código de reserva */}
+            <b>{eventInfo.timeText}</b> 
+            <div>{eventInfo.event.extendedProps.codigo_reserva}</div> 
           </div>
         );
       };
@@ -19,10 +19,10 @@ const WeeklyCalendar = ({ events }) => {
         <FullCalendar
         plugins={[timeGridPlugin, interactionPlugin]}
         initialView="timeGridWeek"
-        events={events} // Asegúrate de que los eventos incluyan codigo_reserva
+        events={events} 
         editable={false}
         selectable={false}
-        eventContent={renderEventContent} // Personaliza el contenido del evento
+        eventContent={renderEventContent} 
         headerToolbar={{
             left: 'prev,next today',
             center: 'title',

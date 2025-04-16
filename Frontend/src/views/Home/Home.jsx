@@ -43,7 +43,6 @@ const calculateAvailableTimes = () => {
 
   const durationMinutes = parseInt(selectedDuration);
 
-  // Validar que reservas sea un array
   const reservasDelDia = Array.isArray(reservas)
     ? reservas.filter((reserva) =>
         dayjs(reserva.fecha_reserva).isSame(selectedDate, 'day')

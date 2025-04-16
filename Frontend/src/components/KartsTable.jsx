@@ -54,7 +54,7 @@ export default function KartsTable() {
           ) : (
             <TableRow>
               <TableCell colSpan={4} align="center">
-                No data available
+                No hay carritos
               </TableCell>
             </TableRow>
           )}

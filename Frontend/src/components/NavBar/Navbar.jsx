@@ -21,10 +21,13 @@ export const Navbar = () => {
             <NavLink to="/karts">Carritos</NavLink>
           </li>
           <li>
-            <NavLink to="/contact">Contacto</NavLink>
+            <NavLink to="/prices">Precios</NavLink>
           </li>
           <li>
-            <NavLink to="/prices">Precios</NavLink>
+            <NavLink to="/rack">Rack semanal</NavLink>
+          </li>
+          <li>
+            <NavLink to="/reports">Reportes</NavLink>
           </li>
         </ul>
       </nav>

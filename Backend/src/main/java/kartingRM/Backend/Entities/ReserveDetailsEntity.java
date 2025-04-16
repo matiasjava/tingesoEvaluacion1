@@ -26,7 +26,7 @@ public class ReserveDetailsEntity {
 
     private String memberName;
 
-    private Date dateBirthday;
+    private LocalDate dateBirthday;
 
     private double montoFinal;
 

@@ -41,7 +41,7 @@ public class ReserveService {
             int maxCumpleanos = calcularMaxCumpleanos(cantidadPersonas); 
             int cumpleanosAplicados = 0;
             double montoTotalReserva = 0.0;
-            Date fechacumple = reserve.getDetalles().get(0).getDateBirthday();
+            LocalDate fechacumple = reserve.getDetalles().get(0).getDateBirthday();
             System.out.println("kumpleaños: " + fechacumple); // sacar despues
             System.out.println("kumpleaños: " + fechacumple); // sacar despues
     
@@ -49,7 +49,7 @@ public class ReserveService {
                 detalle.setReserve(reserve); 
                 double descuentoCumpleanos = 0.0;
                 if (cumpleanosAplicados < maxCumpleanos && 
-                    detalle.getDateBirthday().toLocalDate().equals(reserve.getFecha_uso())) {
+                    detalle.getDateBirthday().equals(reserve.getFecha_uso())) {
                     descuentoCumpleanos = 0.50; 
                     cumpleanosAplicados++;
                 }
