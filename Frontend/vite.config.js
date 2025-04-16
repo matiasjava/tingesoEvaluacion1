@@ -6,10 +6,18 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:8090', // URL del backend
+        target: 'http://localhost:8090',
         changeOrigin: true,
         secure: false,
       },
     },
+  },
+  optimizeDeps: {
+    include: [
+      '@fullcalendar/react',
+      '@fullcalendar/timegrid',
+      '@fullcalendar/interaction',
+      '@fullcalendar/daygrid',
+    ],
   },
 });

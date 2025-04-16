@@ -85,65 +85,61 @@ const Formulario = () => {
             />
           </div>
 
-              {personas.map((persona, index) => (
-      <div key={index} className="persona-form">
-        <h3>Persona {index + 1}</h3>
-        <div>
-          <label htmlFor={`nombre-${index}`}>Nombre:</label>
-          <input
-            type="text"
-            id={`nombre-${index}`}
-            value={persona.nombre}
-            onChange={(e) => handlePersonaChange(index, 'nombre', e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label htmlFor={`rut-${index}`}>RUT:</label>
-          <input
-            type="text"
-            id={`rut-${index}`}
-            value={persona.rut}
-            onChange={(e) => handlePersonaChange(index, 'rut', e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label htmlFor={`fechaCumpleanos-${index}`}>Fecha de Cumpleaños:</label>
-          <input
-            type="date"
-            id={`fechaCumpleanos-${index}`}
-            value={persona.fechaCumpleanos}
-            onChange={(e) => handlePersonaChange(index, 'fechaCumpleanos', e.target.value)}
-            required
-          />
-        </div>
-        {index === 0 && (
-          <>
-            <div>
-              <label htmlFor={`email-${index}`}>Email:</label>
-              <input
-                type="email"
-                id={`email-${index}`}
-                value={persona.email || ''}
-                onChange={(e) => handlePersonaChange(index, 'email', e.target.value)}
-                required
-              />
-            </div>
-            <div>
-              <label htmlFor={`telefono-${index}`}>Teléfono:</label>
-              <input
-                type="text"
-                id={`telefono-${index}`}
-                value={persona.telefono || ''}
-                onChange={(e) => handlePersonaChange(index, 'telefono', e.target.value)}
-                required
-              />
-            </div>
-          </>
-        )}
-      </div>
-    ))}
+          {personas.map((persona, index) => (
+  <div key={index} className="persona-form">
+    <h3>Persona {index + 1}</h3>
+    <div>
+      <label htmlFor={`nombre-${index}`}>Nombre:</label>
+      <input
+        type="text"
+        id={`nombre-${index}`}
+        value={persona.nombre}
+        onChange={(e) => handlePersonaChange(index, 'nombre', e.target.value)}
+        required
+      />
+    </div>
+    <div>
+      <label htmlFor={`rut-${index}`}>RUT:</label>
+      <input
+        type="text"
+        id={`rut-${index}`}
+        value={persona.rut}
+        onChange={(e) => handlePersonaChange(index, 'rut', e.target.value)}
+        required
+      />
+    </div>
+    <div>
+      <label htmlFor={`fechaCumpleanos-${index}`}>Fecha de Cumpleaños:</label>
+      <input
+        type="date"
+        id={`fechaCumpleanos-${index}`}
+        value={persona.fechaCumpleanos}
+        onChange={(e) => handlePersonaChange(index, 'fechaCumpleanos', e.target.value)}
+        required
+      />
+    </div>
+    <div>
+      <label htmlFor={`email-${index}`}>Email:</label>
+      <input
+        type="email"
+        id={`email-${index}`}
+        value={persona.email || ''}
+        onChange={(e) => handlePersonaChange(index, 'email', e.target.value)}
+        required
+      />
+    </div>
+    <div>
+      <label htmlFor={`telefono-${index}`}>Teléfono:</label>
+      <input
+        type="text"
+        id={`telefono-${index}`}
+        value={persona.telefono || ''}
+        onChange={(e) => handlePersonaChange(index, 'telefono', e.target.value)}
+        required
+      />
+    </div>
+  </div>
+))}
 
           <button type="submit">Confirmar Reserva</button>
         </form>

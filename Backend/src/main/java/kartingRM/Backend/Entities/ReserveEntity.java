@@ -47,9 +47,6 @@ public class ReserveEntity {
     @OneToMany(mappedBy = "reserve", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ReserveDetailsEntity> detalles;
 
-
-
-
     // para generar el codigo de reserva aleatorio
     @PrePersist
     private void generateCodigoReserva() {

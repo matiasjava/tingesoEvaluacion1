@@ -49,9 +49,10 @@ public class ReserveController {
     public List<Map<String, String>> getAllReserves() {
         return reserveService.getAllReserves().stream().map(reserve -> {
             Map<String, String> formattedReserve = new HashMap<>();
-            formattedReserve.put("fecha_reserva", reserve.getFecha_uso().toString()); // Ajusta según el nombre real del campo
-            formattedReserve.put("hora_inicio", reserve.getHora_inicio()); // Ajusta según el nombre real del campo
-            formattedReserve.put("hora_fin", reserve.getHora_fin()); // Ajusta según el nombre real del campo
+            formattedReserve.put("fecha_reserva", reserve.getFecha_uso().toString());
+            formattedReserve.put("hora_inicio", reserve.getHora_inicio());
+            formattedReserve.put("hora_fin", reserve.getHora_fin());
+            formattedReserve.put("codigo_reserva", reserve.getCodigo_reserva());
             return formattedReserve;
         }).collect(Collectors.toList());
     }
