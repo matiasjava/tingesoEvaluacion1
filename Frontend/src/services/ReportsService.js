@@ -6,23 +6,17 @@ export const generarReporteIngresos = (reservas, fechaInicio, fechaFin) => {
     return fechaReserva.isBetween(fechaInicio, fechaFin, 'day', '[]');
   });
 
-  // Inicializar ingresos por categoría
   const ingresosPorCategoria = {
     '10 vueltas o máx 10 min': 0,
     '15 vueltas o máx 15 min': 0,
     '20 vueltas o máx 20 min': 0,
   };
 
-  // Tarifas por categoría (puedes ajustar estos valores según tu lógica)
-  const tarifas = {
-    '10 vueltas o máx 10 min': 4000,
-    '15 vueltas o máx 15 min': 7000,
-    '20 vueltas o máx 20 min': 2000,
-  };
+  // Tarifas por categoría
+  const tarifas = { '10 vueltas o máx 10 min': 4000, '15 vueltas o máx 15 min': 7000, '20 vueltas o máx 20 min': 2000,};
 
-  // Calcular ingresos por categoría
   reservasFiltradas.forEach((reserva) => {
-    const { tipo_duracion } = reserva; // Ejemplo: "10 vueltas o máx 10 min"
+    const { tipo_duracion } = reserva; 
     if (ingresosPorCategoria[tipo_duracion] !== undefined) {
       ingresosPorCategoria[tipo_duracion] += tarifas[tipo_duracion];
     }
@@ -33,7 +27,7 @@ export const generarReporteIngresos = (reservas, fechaInicio, fechaFin) => {
   let totalGeneral = 0;
 
   reservasFiltradas.forEach((reserva) => {
-    const mes = dayjs(reserva.fecha_reserva).format('MMMM YYYY'); // Ejemplo: "Enero 2024"
+    const mes = dayjs(reserva.fecha_reserva).format('MMMM YYYY');
     const { tipo_duracion } = reserva;
 
     if (!ingresosPorMes[mes]) {

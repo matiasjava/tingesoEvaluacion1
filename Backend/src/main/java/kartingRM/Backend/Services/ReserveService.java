@@ -3,15 +3,35 @@ package kartingRM.Backend.Services;
 import kartingRM.Backend.Entities.ReserveDetailsEntity;
 import kartingRM.Backend.Entities.ReserveEntity;
 import kartingRM.Backend.Repositories.ReserveRepository;
+
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
-import java.sql.Date;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.poi.ss.usermodel.*;
+
+import java.io.*;
+
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.io.File;
+import java.io.FileInputStream;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.io.IOException;
+
 
 @Service
 public class ReserveService {
@@ -21,6 +41,9 @@ public class ReserveService {
 
     @Autowired
     private ReserveRepository reserveRepository;
+
+    @Autowired
+    private JavaMailSender mailSender;
 
     public List<ReserveEntity> getAllReserves() {
         return reserveRepository.findAll();
@@ -35,42 +58,251 @@ public class ReserveService {
         }
     }
 
+    public String convertirExcelAPdf(String excelPath) throws IOException {
+        // Crear un documento PDF
+        PDDocument document = new PDDocument();
+        PDPage page = new PDPage();
+        document.addPage(page);
+    
+        // Crear un flujo de contenido para escribir en el PDF
+        PDPageContentStream contentStream = new PDPageContentStream(document, page);
+    
+        // Leer el archivo Excel
+        FileInputStream excelFile = new FileInputStream(new File(excelPath));
+        Workbook workbook = WorkbookFactory.create(excelFile);
+        Sheet sheet = workbook.getSheetAt(0);
+    
+        // Configuración inicial para escribir en el PDF
+        contentStream.setFont(PDType1Font.HELVETICA, 12);
+        float yPosition = 750; // Posición inicial en el eje Y
+        float margin = 50; // Margen izquierdo
+        float lineHeight = 15; // Altura de cada línea
+    
+
+        for (Row row : sheet) {
+            StringBuilder rowContent = new StringBuilder();
+    
+
+            for (Cell cell : row) {
+                rowContent.append(cell.toString()).append(" | ");
+            }
+    
+
+            contentStream.beginText();
+            contentStream.newLineAtOffset(margin, yPosition);
+            contentStream.showText(rowContent.toString());
+            contentStream.endText();
+    
+            yPosition -= lineHeight;
+    
+
+            if (yPosition < 50) {
+                contentStream.close();
+                page = new PDPage();
+                document.addPage(page);
+                contentStream = new PDPageContentStream(document, page);
+                contentStream.setFont(PDType1Font.HELVETICA, 12);
+                yPosition = 750; // Reiniciar la posición Y
+            }
+        }
+    
+
+        contentStream.close();
+        workbook.close();
+        excelFile.close();
+        String pdfPath = excelPath.replace(".xlsx", ".pdf");
+        document.save(pdfPath);
+        document.close();
+    
+        return pdfPath;
+    }
+
+    public String generarComprobantePdf(ReserveEntity reserve) throws IOException {
+        PDDocument document = new PDDocument();
+        PDPage page = new PDPage();
+        document.addPage(page);
+    
+        PDPageContentStream contentStream = new PDPageContentStream(document, page);
+    
+        // Configuración inicial
+        contentStream.setFont(PDType1Font.HELVETICA, 12);
+        float yPosition = 750; // Posición inicial en el eje Y
+        float margin = 50; // Margen izquierdo
+        float lineHeight = 15; // Altura de cada línea
+    
+        // Información de la Reserva
+        contentStream.beginText();
+        contentStream.newLineAtOffset(margin, yPosition);
+        contentStream.setFont(PDType1Font.HELVETICA_BOLD, 14);
+        contentStream.showText("Comprobante de Reserva");
+        contentStream.endText();
+    
+        yPosition -= lineHeight;
+    
+        contentStream.beginText();
+        contentStream.newLineAtOffset(margin, yPosition);
+        contentStream.setFont(PDType1Font.HELVETICA, 12);
+        contentStream.showText("Código de Reserva: " + reserve.getCodigo_reserva());
+        contentStream.newLineAtOffset(0, -lineHeight);
+        contentStream.showText("Fecha y Hora de la Reserva: " + reserve.getFecha_uso() + " " + reserve.getHora_inicio() + " - " + reserve.getHora_fin());
+        contentStream.newLineAtOffset(0, -lineHeight);
+        contentStream.showText("Número de Vueltas o Tiempo Máximo: " + reserve.getVueltas_o_tiempo());
+        contentStream.newLineAtOffset(0, -lineHeight);
+        contentStream.showText("Cantidad de Personas: " + reserve.getCantidad_personas());
+        contentStream.newLineAtOffset(0, -lineHeight);
+        contentStream.showText("Nombre del Cliente: " + reserve.getDetalles().get(0).getMemberName());
+        contentStream.endText();
+    
+        yPosition -= (lineHeight * 5);
+    
+        // Detalle de Pago (Tabla)
+        contentStream.beginText();
+        contentStream.newLineAtOffset(margin, yPosition);
+        contentStream.setFont(PDType1Font.HELVETICA_BOLD, 12);
+        contentStream.showText("Detalle de Pago:");
+        contentStream.endText();
+    
+        yPosition -= lineHeight;
+    
+        // Dibujar encabezados de la tabla
+        float tableWidth = 500;
+        float[] columnWidths = {100, 80, 80, 80, 80, 80}; // Ancho de cada columna
+        String[] headers = {"Nombre", "Tarifa Base", "Descuento", "Monto Final", "IVA", "Total con IVA"};
+    
+        double totalReservaConIva = 0.0; // Variable para almacenar la suma total
+
+        
+        contentStream.setFont(PDType1Font.HELVETICA_BOLD, 10);
+        float xPosition = margin;
+        for (String header : headers) {
+            contentStream.beginText();
+            contentStream.newLineAtOffset(xPosition, yPosition);
+            contentStream.showText(header);
+            contentStream.endText();
+            xPosition += columnWidths[headers.length - headers.length + 1]; // Ajustar posición X
+        }
+        yPosition -= lineHeight; // Mover hacia abajo después de los encabezados
+
+        // Dibujar filas de la tabla
+        contentStream.setFont(PDType1Font.HELVETICA, 10);
+        for (ReserveDetailsEntity detalle : reserve.getDetalles()) {
+            double tarifaBase = detalle.getMontoFinal() / (1 - detalle.getDiscount());
+            double iva = detalle.getMontoFinal() * 0.19; // 19% de IVA
+            double totalConIva = detalle.getMontoFinal() + iva;
+
+            totalReservaConIva += totalConIva; // Sumar el total con IVA
+
+            xPosition = margin;
+            String[] row = {
+                detalle.getMemberName(),
+                String.format("%.2f", tarifaBase),
+                String.format("%.2f", 100 * detalle.getDiscount()) + " %",
+                String.format("%.2f", detalle.getMontoFinal()),
+                String.format("%.2f", iva),
+                String.format("%.2f", totalConIva)
+            };
+
+            for (String cell : row) {
+                contentStream.beginText();
+                contentStream.newLineAtOffset(xPosition, yPosition);
+                contentStream.showText(cell);
+                contentStream.endText();
+                xPosition += columnWidths[row.length - row.length + 1]; // Ajustar posición X
+            }
+
+            yPosition -= lineHeight;
+
+            // para agregar otra pagina
+            if (yPosition < 50) {
+                contentStream.close();
+                page = new PDPage();
+                document.addPage(page);
+                contentStream = new PDPageContentStream(document, page);
+                contentStream.setFont(PDType1Font.HELVETICA, 12);
+                yPosition = 750; // Reiniciar la posición Y
+            }
+        }
+
+        // Agregar el total de la reserva al final
+        yPosition -= lineHeight;
+        contentStream.beginText();
+        contentStream.newLineAtOffset(margin, yPosition);
+        contentStream.setFont(PDType1Font.HELVETICA_BOLD, 12);
+        contentStream.showText("Total Reserva: " + "$" + String.format("%.2f", totalReservaConIva));
+        contentStream.endText();
+    
+        contentStream.close();
+    
+        // guardar el pdf
+        String pdfPath = "comprobantes/comprobante_" + reserve.getId() + ".pdf";
+        File comprobantesDir = new File("comprobantes");
+        if (!comprobantesDir.exists()) {
+            comprobantesDir.mkdir();
+        }
+        document.save(pdfPath);
+        document.close();
+    
+        return pdfPath;
+    }
+
+    public void enviarComprobantePorCorreo(String[] destinatarios, String filePath, String reserveCode) throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+        helper.setTo(destinatarios);
+        helper.setSubject("Comprobante de Reserva " + reserveCode);
+        helper.setText("hola");
+        File file = new File(filePath);
+        helper.addAttachment("comprobante.pdf", file);
+    
+        mailSender.send(message);
+    }
+
     public ReserveEntity saveReserve(ReserveEntity reserve) {
         if (reserve.getDetalles() != null) {
             int cantidadPersonas = reserve.getCantidad_personas();
-            int maxCumpleanos = calcularMaxCumpleanos(cantidadPersonas); 
+            int maxCumpleanos = calcularMaxCumpleanos(cantidadPersonas);
             int cumpleanosAplicados = 0;
             double montoTotalReserva = 0.0;
-            LocalDate fechacumple = reserve.getDetalles().get(0).getDateBirthday();
-            System.out.println("kumpleaños: " + fechacumple); // sacar despues
-            System.out.println("kumpleaños: " + fechacumple); // sacar despues
-    
+
             for (ReserveDetailsEntity detalle : reserve.getDetalles()) {
-                detalle.setReserve(reserve); 
+                detalle.setReserve(reserve);
                 double descuentoCumpleanos = 0.0;
-                if (cumpleanosAplicados < maxCumpleanos && 
-                    detalle.getDateBirthday().equals(reserve.getFecha_uso())) {
-                    descuentoCumpleanos = 0.50; 
+                if (cumpleanosAplicados < maxCumpleanos &&
+                        detalle.getDateBirthday().equals(reserve.getFecha_uso())) {
+                    descuentoCumpleanos = 0.50;
                     cumpleanosAplicados++;
                 }
 
-                double descuentoCliente = userService.obtenerDescuentoPorCategoria(detalle.getUserId()); 
-                double descuentoGrupo = calcularDescuentoGrupo(cantidadPersonas); 
-    
+                double descuentoCliente = userService.obtenerDescuentoPorCategoria(detalle.getUserId());
+                double descuentoGrupo = calcularDescuentoGrupo(cantidadPersonas);
+
                 double descuentoFinal = Math.max(descuentoCumpleanos, Math.max(descuentoCliente, descuentoGrupo));
                 detalle.setDiscount(descuentoFinal);
 
                 double tarifaBase = calcularTarifaBase(reserve.getVueltas_o_tiempo(), reserve.getFecha_uso(), cantidadPersonas, detalle.getUserId());
-                System.out.println("Tarifa base: " + tarifaBase); // sacar despues
                 double montoFinal = tarifaBase * (1 - descuentoFinal);
                 detalle.setMontoFinal(montoFinal);
                 montoTotalReserva += montoFinal;
             }
-    
+
             reserve.setMontoFinal(montoTotalReserva);
-            System.out.println("Tarifa base: " + montoTotalReserva);
         }
-        return reserveRepository.save(reserve);
+
+        ReserveEntity savedReserve = reserveRepository.save(reserve);
+
+        try {
+            String pdfPath = generarComprobantePdf(savedReserve); // Generar el PDF
+            String[] emails = savedReserve.getDetalles().stream()
+                    .map(detalle -> userService.findUserById(detalle.getUserId()).getEmail())
+                    .toArray(String[]::new);
+            enviarComprobantePorCorreo(emails, pdfPath, savedReserve.getCodigo_reserva()); // Enviar el PDF por correo
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Error al generar o enviar el comprobante.");
+        }
+
+        return savedReserve;
     }
 
     private int calcularMaxCumpleanos(int cantidadPersonas) {
