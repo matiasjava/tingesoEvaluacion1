@@ -48,9 +48,9 @@ public class UserController {
     public ResponseEntity<?> incrementVisitsAndUpdateCategory(@PathVariable("id") Long userId) {
         try {
             UserEntity updatedUser = userService.incrementVisitsAndUpdateCategory(userId);
-            return ResponseEntity.ok(updatedUser); // Devuelve 200 OK con el usuario actualizado
+            return ResponseEntity.ok(updatedUser);
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage()); // Devuelve 404 si el usuario no se encuentra
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
 

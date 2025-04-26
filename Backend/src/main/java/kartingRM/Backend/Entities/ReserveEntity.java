@@ -9,8 +9,12 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 
 @Entity
 @Table(name = "reserves")
@@ -41,11 +45,13 @@ public class ReserveEntity {
     private int cantidad_personas;
 
     private String vueltas_o_tiempo;
-    
+
+    @Column(name = "monto_final")
     private double montoFinal;
 
     @OneToMany(mappedBy = "reserve", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ReserveDetailsEntity> detalles;
+    @JsonManagedReference
+    private List<ReserveDetailsEntity> detalles = new ArrayList<>();
 
     // para generar el codigo de reserva aleatorio
     @PrePersist
@@ -53,5 +59,14 @@ public class ReserveEntity {
         if (this.codigo_reserva == null || this.codigo_reserva.isEmpty()) {
             this.codigo_reserva = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         }
+    }
+    @Override
+    public String toString() {
+        return "ReserveEntity{" +
+                "id=" + id +
+                ", fecha_uso=" + fecha_uso +
+                ", vueltas_o_tiempo='" + vueltas_o_tiempo + '\'' +
+                ", monto_final=" + montoFinal +
+                '}';
     }
 }

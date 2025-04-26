@@ -1,54 +1,27 @@
-import dayjs from 'dayjs';
 import axios from 'axios';
-export const generarReporteIngresos = (reservas, fechaInicio, fechaFin) => {
-  const reservasFiltradas = reservas.filter((reserva) => {
-    const fechaReserva = dayjs(reserva.fecha_reserva);
-    return fechaReserva.isBetween(fechaInicio, fechaFin, 'day', '[]');
-  });
 
-  const ingresosPorCategoria = {
-    '10 vueltas o máx 10 min': 0,
-    '15 vueltas o máx 15 min': 0,
-    '20 vueltas o máx 20 min': 0,
-  };
+const API_URL = `${import.meta.env.VITE_PAYROLL_BACKEND_SERVER}/api/reserves/`;
 
-  // Tarifas por categoría
-  const tarifas = { '10 vueltas o máx 10 min': 4000, '15 vueltas o máx 15 min': 7000, '20 vueltas o máx 20 min': 2000,};
-
-  reservasFiltradas.forEach((reserva) => {
-    const { tipo_duracion } = reserva; 
-    if (ingresosPorCategoria[tipo_duracion] !== undefined) {
-      ingresosPorCategoria[tipo_duracion] += tarifas[tipo_duracion];
+export const fetchReporteIngresos = async (fechaInicio, fechaFin) => {
+    try {
+        const response = await axios.get(`${API_URL}ingresos-por-vueltas-tiempo`, {
+            params: { fechaInicio, fechaFin },
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching report:', error);
+        throw error;
     }
-  });
+};
 
-  // Calcular totales por mes y general
-  const ingresosPorMes = {};
-  let totalGeneral = 0;
-
-  reservasFiltradas.forEach((reserva) => {
-    const mes = dayjs(reserva.fecha_reserva).format('MMMM YYYY');
-    const { tipo_duracion } = reserva;
-
-    if (!ingresosPorMes[mes]) {
-      ingresosPorMes[mes] = {
-        '10 vueltas o máx 10 min': 0,
-        '15 vueltas o máx 15 min': 0,
-        '20 vueltas o máx 20 min': 0,
-        total: 0,
-      };
-    }
-
-    if (ingresosPorCategoria[tipo_duracion] !== undefined) {
-      ingresosPorMes[mes][tipo_duracion] += tarifas[tipo_duracion];
-      ingresosPorMes[mes].total += tarifas[tipo_duracion];
-      totalGeneral += tarifas[tipo_duracion];
-    }
-  });
-
-  return {
-    ingresosPorCategoria,
-    ingresosPorMes,
-    totalGeneral,
-  };
+export const fetchReporteParticipantes = async (fechaInicio, fechaFin) => {
+  try {
+      const response = await axios.get(`${API_URL}ingresos-por-cantidad-personas`, {
+          params: { fechaInicio, fechaFin },
+      });
+      return response.data;
+  } catch (error) {
+      console.error('Error fetching report by participants:', error);
+      throw error;
+  }
 };

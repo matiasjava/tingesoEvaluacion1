@@ -5,10 +5,12 @@ import kartingRM.Backend.Entities.ReserveEntity;
 import kartingRM.Backend.Services.ReserveDetailsService;
 import kartingRM.Backend.Services.ReserveService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -75,5 +77,28 @@ public class ReserveController {
     @DeleteMapping("/{id}")
     public void deleteReserve(@PathVariable("id") Long id) {
         reserveService.deleteReserve(id);
+    }
+    @GetMapping("/ingresos-por-vueltas-tiempo")
+    public Map<String, Map<String, Double>> getReporteIngresosPorVueltasOTiempo(
+            @RequestParam("fechaInicio") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
+            @RequestParam("fechaFin") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin) {
+        return reserveService.getReporteIngresosPorVueltasOTiempo(fechaInicio, fechaFin);
+    }
+    @GetMapping("/ingresos-por-cantidad-personas")
+    public ResponseEntity<?> getReporteIngresosPorCantidadDePersonas(
+            @RequestParam("fechaInicio") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
+            @RequestParam("fechaFin") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin) {
+        if (fechaInicio == null || fechaFin == null) {
+            return ResponseEntity.badRequest().body("Los parámetros 'fechaInicio' y 'fechaFin' son obligatorios.");
+        }
+        if (fechaInicio.isAfter(fechaFin)) {
+            return ResponseEntity.badRequest().body("La fecha de inicio no puede ser posterior a la fecha de fin.");
+        }
+        try {
+            Map<String, Map<String, Double>> reporte = reserveService.getReporteIngresosPorCantidadDePersonas(fechaInicio, fechaFin);
+            return ResponseEntity.ok(reporte);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al generar el reporte: " + e.getMessage());
+        }
     }
 }

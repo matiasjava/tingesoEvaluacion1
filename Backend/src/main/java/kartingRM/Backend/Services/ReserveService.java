@@ -20,17 +20,17 @@ import java.io.*;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.util.ByteArrayDataSource;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.io.File;
-import java.io.FileInputStream;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.io.IOException;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -58,79 +58,18 @@ public class ReserveService {
         }
     }
 
-    public String convertirExcelAPdf(String excelPath) throws IOException {
-        // Crear un documento PDF
-        PDDocument document = new PDDocument();
-        PDPage page = new PDPage();
-        document.addPage(page);
-    
-        // Crear un flujo de contenido para escribir en el PDF
-        PDPageContentStream contentStream = new PDPageContentStream(document, page);
-    
-        // Leer el archivo Excel
-        FileInputStream excelFile = new FileInputStream(new File(excelPath));
-        Workbook workbook = WorkbookFactory.create(excelFile);
-        Sheet sheet = workbook.getSheetAt(0);
-    
-        // Configuración inicial para escribir en el PDF
-        contentStream.setFont(PDType1Font.HELVETICA, 12);
-        float yPosition = 750; // Posición inicial en el eje Y
-        float margin = 50; // Margen izquierdo
-        float lineHeight = 15; // Altura de cada línea
-    
-
-        for (Row row : sheet) {
-            StringBuilder rowContent = new StringBuilder();
-    
-
-            for (Cell cell : row) {
-                rowContent.append(cell.toString()).append(" | ");
-            }
-    
-
-            contentStream.beginText();
-            contentStream.newLineAtOffset(margin, yPosition);
-            contentStream.showText(rowContent.toString());
-            contentStream.endText();
-    
-            yPosition -= lineHeight;
-    
-
-            if (yPosition < 50) {
-                contentStream.close();
-                page = new PDPage();
-                document.addPage(page);
-                contentStream = new PDPageContentStream(document, page);
-                contentStream.setFont(PDType1Font.HELVETICA, 12);
-                yPosition = 750; // Reiniciar la posición Y
-            }
-        }
-    
-
-        contentStream.close();
-        workbook.close();
-        excelFile.close();
-        String pdfPath = excelPath.replace(".xlsx", ".pdf");
-        document.save(pdfPath);
-        document.close();
-    
-        return pdfPath;
-    }
-
-    public String generarComprobantePdf(ReserveEntity reserve) throws IOException {
+    public byte[] generarComprobantePdf(ReserveEntity reserve) throws IOException {
         PDDocument document = new PDDocument();
         PDPage page = new PDPage();
         document.addPage(page);
     
         PDPageContentStream contentStream = new PDPageContentStream(document, page);
     
-        // Configuración inicial
         contentStream.setFont(PDType1Font.HELVETICA, 12);
-        float yPosition = 750; // Posición inicial en el eje Y
-        float margin = 50; // Margen izquierdo
-        float lineHeight = 15; // Altura de cada línea
+        float yPosition = 750; // posicion eje Y
+        float margin = 50; // margen 
+        float lineHeight = 15; // altura 
     
-        // Información de la Reserva
         contentStream.beginText();
         contentStream.newLineAtOffset(margin, yPosition);
         contentStream.setFont(PDType1Font.HELVETICA_BOLD, 14);
@@ -155,7 +94,7 @@ public class ReserveService {
     
         yPosition -= (lineHeight * 5);
     
-        // Detalle de Pago (Tabla)
+        // detalles tablita
         contentStream.beginText();
         contentStream.newLineAtOffset(margin, yPosition);
         contentStream.setFont(PDType1Font.HELVETICA_BOLD, 12);
@@ -164,14 +103,13 @@ public class ReserveService {
     
         yPosition -= lineHeight;
     
-        // Dibujar encabezados de la tabla
+        // encabezados
         float tableWidth = 500;
-        float[] columnWidths = {100, 80, 80, 80, 80, 80}; // Ancho de cada columna
+        float[] columnWidths = {100, 80, 80, 80, 80, 80};
         String[] headers = {"Nombre", "Tarifa Base", "Descuento", "Monto Final", "IVA", "Total con IVA"};
     
-        double totalReservaConIva = 0.0; // Variable para almacenar la suma total
+        double totalReservaConIva = 0.0; 
 
-        
         contentStream.setFont(PDType1Font.HELVETICA_BOLD, 10);
         float xPosition = margin;
         for (String header : headers) {
@@ -179,15 +117,14 @@ public class ReserveService {
             contentStream.newLineAtOffset(xPosition, yPosition);
             contentStream.showText(header);
             contentStream.endText();
-            xPosition += columnWidths[headers.length - headers.length + 1]; // Ajustar posición X
+            xPosition += columnWidths[headers.length - headers.length + 1];
         }
-        yPosition -= lineHeight; // Mover hacia abajo después de los encabezados
+        yPosition -= lineHeight; 
 
-        // Dibujar filas de la tabla
         contentStream.setFont(PDType1Font.HELVETICA, 10);
         for (ReserveDetailsEntity detalle : reserve.getDetalles()) {
             double tarifaBase = detalle.getMontoFinal() / (1 - detalle.getDiscount());
-            double iva = detalle.getMontoFinal() * 0.19; // 19% de IVA
+            double iva = detalle.getMontoFinal() * 0.19; //IVA
             double totalConIva = detalle.getMontoFinal() + iva;
 
             totalReservaConIva += totalConIva; // Sumar el total con IVA
@@ -207,7 +144,7 @@ public class ReserveService {
                 contentStream.newLineAtOffset(xPosition, yPosition);
                 contentStream.showText(cell);
                 contentStream.endText();
-                xPosition += columnWidths[row.length - row.length + 1]; // Ajustar posición X
+                xPosition += columnWidths[row.length - row.length + 1]; 
             }
 
             yPosition -= lineHeight;
@@ -219,11 +156,10 @@ public class ReserveService {
                 document.addPage(page);
                 contentStream = new PDPageContentStream(document, page);
                 contentStream.setFont(PDType1Font.HELVETICA, 12);
-                yPosition = 750; // Reiniciar la posición Y
+                yPosition = 750; 
             }
         }
-
-        // Agregar el total de la reserva al final
+        // total de la reserva al final
         yPosition -= lineHeight;
         contentStream.beginText();
         contentStream.newLineAtOffset(margin, yPosition);
@@ -233,27 +169,22 @@ public class ReserveService {
     
         contentStream.close();
     
-        // guardar el pdf
-        String pdfPath = "comprobantes/comprobante_" + reserve.getId() + ".pdf";
-        File comprobantesDir = new File("comprobantes");
-        if (!comprobantesDir.exists()) {
-            comprobantesDir.mkdir();
-        }
-        document.save(pdfPath);
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        document.save(outputStream);
         document.close();
     
-        return pdfPath;
+        return outputStream.toByteArray();
     }
 
-    public void enviarComprobantePorCorreo(String[] destinatarios, String filePath, String reserveCode) throws MessagingException {
+    public void enviarComprobantePorCorreo(String[] destinatarios, byte[] pdfBytes, String reserveCode) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
-
+    
         helper.setTo(destinatarios);
         helper.setSubject("Comprobante de Reserva " + reserveCode);
-        helper.setText("hola");
-        File file = new File(filePath);
-        helper.addAttachment("comprobante.pdf", file);
+        helper.setText("Hola");
+    
+        helper.addAttachment("comprobante.pdf", new ByteArrayDataSource(pdfBytes, "application/pdf"));
     
         mailSender.send(message);
     }
@@ -264,7 +195,7 @@ public class ReserveService {
             int maxCumpleanos = calcularMaxCumpleanos(cantidadPersonas);
             int cumpleanosAplicados = 0;
             double montoTotalReserva = 0.0;
-
+    
             for (ReserveDetailsEntity detalle : reserve.getDetalles()) {
                 detalle.setReserve(reserve);
                 double descuentoCumpleanos = 0.0;
@@ -273,39 +204,44 @@ public class ReserveService {
                     descuentoCumpleanos = 0.50;
                     cumpleanosAplicados++;
                 }
-
+    
                 double descuentoCliente = userService.obtenerDescuentoPorCategoria(detalle.getUserId());
                 double descuentoGrupo = calcularDescuentoGrupo(cantidadPersonas);
-
+    
                 double descuentoFinal = Math.max(descuentoCumpleanos, Math.max(descuentoCliente, descuentoGrupo));
                 detalle.setDiscount(descuentoFinal);
-
-                double tarifaBase = calcularTarifaBase(reserve.getVueltas_o_tiempo(), reserve.getFecha_uso(), cantidadPersonas, detalle.getUserId());
+    
+                double tarifaBase = calcularTarifaBase(reserve.getVueltas_o_tiempo());
                 double montoFinal = tarifaBase * (1 - descuentoFinal);
                 detalle.setMontoFinal(montoFinal);
                 montoTotalReserva += montoFinal;
             }
-
+    
             reserve.setMontoFinal(montoTotalReserva);
         }
-
+    
         ReserveEntity savedReserve = reserveRepository.save(reserve);
-
+    
         try {
-            String pdfPath = generarComprobantePdf(savedReserve); // Generar el PDF
+            // Generar el PDF en memoria
+            byte[] pdfBytes = generarComprobantePdf(savedReserve);
+    
+            // Obtener los correos electrónicos de los usuarios
             String[] emails = savedReserve.getDetalles().stream()
                     .map(detalle -> userService.findUserById(detalle.getUserId()).getEmail())
                     .toArray(String[]::new);
-            enviarComprobantePorCorreo(emails, pdfPath, savedReserve.getCodigo_reserva()); // Enviar el PDF por correo
+    
+            // Enviar el PDF por correo
+            enviarComprobantePorCorreo(emails, pdfBytes, savedReserve.getCodigo_reserva());
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("Error al generar o enviar el comprobante.");
         }
-
+    
         return savedReserve;
     }
 
-    private int calcularMaxCumpleanos(int cantidadPersonas) {
+    public int calcularMaxCumpleanos(int cantidadPersonas) {
         if (cantidadPersonas >= 6 && cantidadPersonas <= 10) {
             return 2; 
         } else if (cantidadPersonas >= 3 && cantidadPersonas <= 5) {
@@ -318,6 +254,7 @@ public class ReserveService {
     public ReserveEntity updateReserve(Long id, ReserveEntity reserve) {
         ReserveEntity existingReserve = getReserveById(id);
         existingReserve.setHora_inicio(reserve.getHora_inicio());
+        existingReserve.setMontoFinal(reserve.getMontoFinal());
         existingReserve.setHora_fin(reserve.getHora_fin());
         existingReserve.setCantidad_personas(reserve.getCantidad_personas());
         return reserveRepository.save(existingReserve);
@@ -340,30 +277,15 @@ public class ReserveService {
         return diasFeriados.contains(fecha);
     } 
 
-    public double calcularTarifaBase(String vueltasOTiempo, LocalDate fechaUso, int cantidadPersonas, Long userId) {
-        double tarifaBase;
-        int duracionMaxima;
+    public double calcularTarifaBase(String vueltasOTiempo) {
+        double tarifaBase = switch (vueltasOTiempo) {
+            case "10 vueltas", "10 minutos" -> 15000;
+            case "15 vueltas", "15 minutos" -> 20000;
+            case "20 vueltas", "20 minutos" -> 25000;
+            default -> throw new IllegalArgumentException("Vueltas o tiempo no válido");
+        };
     
         // Determinar tarifa base y duración máxima
-        switch (vueltasOTiempo) {
-            case "10 vueltas":
-            case "10 minutos":
-                tarifaBase = 15000;
-                duracionMaxima = 30; // minutos
-                break;
-            case "15 vueltas":
-            case "15 minutos":
-                tarifaBase = 20000;
-                duracionMaxima = 35; // minutos
-                break;
-            case "20 vueltas":
-            case "20 minutos":
-                tarifaBase = 25000;
-                duracionMaxima = 40; // minutos
-                break;
-            default:
-                throw new IllegalArgumentException("Vueltas o tiempo no válido");
-        }
         return tarifaBase;
     }
 
@@ -378,5 +300,125 @@ public class ReserveService {
         } else {
             return 0.0; // 0%
         }
+    }
+
+    //  Reporte por cantidad de vueltas o tiempo
+    public Map<String, Map<String, Double>> getReporteIngresosPorVueltasOTiempo(LocalDate fechaInicio, LocalDate fechaFin) {
+        List<ReserveEntity> reservas = reserveRepository.findAll(); // todas las reservas
+        System.out.println("Reservas totales: " + reservas);
+    
+        Map<String, Map<String, Double>> reporte = new LinkedHashMap<>();
+
+        List<String> meses = Arrays.asList("Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre");
+        List<String> categorias = Arrays.asList("10 vueltas o máx 10 min", "15 vueltas o máx 15 min", "20 vueltas o máx 20 min");
+    
+        for (String categoria : categorias) {
+            Map<String, Double> ingresosPorMes = new LinkedHashMap<>();
+            for (String mes : meses) {
+                ingresosPorMes.put(mes, 0.0);
+            }
+            ingresosPorMes.put("TOTAL", 0.0);
+            reporte.put(categoria, ingresosPorMes);
+        }
+    
+        // Filtrar reservas entre las fechas dadas
+        List<ReserveEntity> reservasFiltradas = reservas.stream()
+                .filter(reserva -> reserva.getFecha_uso() != null)
+                .filter(reserva -> !reserva.getFecha_uso().isBefore(fechaInicio) && !reserva.getFecha_uso().isAfter(fechaFin))
+                .collect(Collectors.toList());
+    
+        System.out.println("Reservas filtradas: " + reservasFiltradas);
+
+        for (ReserveEntity reserva : reservasFiltradas) {
+            String categoria = switch (reserva.getVueltas_o_tiempo()) {
+                case "10 vueltas", "10 minutos" -> "10 vueltas o máx 10 min";
+                case "15 vueltas", "15 minutos" -> "15 vueltas o máx 15 min";
+                case "20 vueltas", "20 minutos" -> "20 vueltas o máx 20 min";
+                default -> "Otros";
+            };
+    
+            String mes = meses.get(reserva.getFecha_uso().getMonthValue() - 1); // nombre del mes
+            double monto = reserva.getMontoFinal();
+    
+            // Sumar ingresos al mes correspondiente
+            Map<String, Double> ingresosPorMes = reporte.get(categoria);
+            ingresosPorMes.put(mes, ingresosPorMes.get(mes) + monto);
+            ingresosPorMes.put("TOTAL", ingresosPorMes.get("TOTAL") + monto);
+        }
+
+        Map<String, Double> totalPorMes = new LinkedHashMap<>();
+        for (String mes : meses) {
+            double totalMes = reporte.values().stream()
+                    .mapToDouble(ingresosPorMes -> ingresosPorMes.get(mes))
+                    .sum();
+            totalPorMes.put(mes, totalMes);
+        }
+        totalPorMes.put("TOTAL", totalPorMes.values().stream().mapToDouble(Double::doubleValue).sum());
+        reporte.put("TOTAL", totalPorMes);
+    
+        return reporte;
+    }
+
+    //  Reporte por cantidad de personas
+    public Map<String, Map<String, Double>> getReporteIngresosPorCantidadDePersonas(LocalDate fechaInicio, LocalDate fechaFin) {
+        List<ReserveEntity> reservas = reserveRepository.findAll(); // Obtén todas las reservas
+        Map<String, Map<String, Double>> reporte = new LinkedHashMap<>();
+
+        List<String> meses = Arrays.asList("Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre");
+        List<String> rangos = Arrays.asList("1-2 personas", "3-5 personas", "6-10 personas", "11-15 personas");
+    
+        for (String rango : rangos) {
+            Map<String, Double> ingresosPorMes = new LinkedHashMap<>();
+            for (String mes : meses) {
+                ingresosPorMes.put(mes, 0.0);
+            }
+            ingresosPorMes.put("TOTAL", 0.0);
+            reporte.put(rango, ingresosPorMes);
+        }
+
+        List<ReserveEntity> reservasFiltradas = reservas.stream()
+                .filter(reserva -> reserva.getFecha_uso() != null)
+                .filter(reserva -> !reserva.getFecha_uso().isBefore(fechaInicio) && !reserva.getFecha_uso().isAfter(fechaFin))
+                .collect(Collectors.toList());
+    
+        // Procesar las reservas
+        for (ReserveEntity reserva : reservasFiltradas) {
+            int cantidadPersonas = reserva.getDetalles().size();
+            String rango = getRangoPorCantidadDePersonas(cantidadPersonas);
+    
+            if (rango == null) continue;
+            String mes = meses.get(reserva.getFecha_uso().getMonthValue() - 1);
+            double monto = reserva.getDetalles().stream().mapToDouble(ReserveDetailsEntity::getMontoFinal).sum();
+
+            Map<String, Double> ingresosPorMes = reporte.get(rango);
+            ingresosPorMes.put(mes, ingresosPorMes.get(mes) + monto);
+            ingresosPorMes.put("TOTAL", ingresosPorMes.get("TOTAL") + monto);
+        }
+    
+        // Agregar totales por mes
+        Map<String, Double> totalPorMes = new LinkedHashMap<>();
+        for (String mes : meses) {
+            double totalMes = reporte.values().stream()
+                    .mapToDouble(ingresosPorMes -> ingresosPorMes.get(mes))
+                    .sum();
+            totalPorMes.put(mes, totalMes);
+        }
+        totalPorMes.put("TOTAL", totalPorMes.values().stream().mapToDouble(Double::doubleValue).sum());
+        reporte.put("TOTAL", totalPorMes);
+    
+        return reporte;
+    }
+    
+    public String getRangoPorCantidadDePersonas(int cantidadPersonas) {
+        if (cantidadPersonas >= 1 && cantidadPersonas <= 2) {
+            return "1-2 personas";
+        } else if (cantidadPersonas >= 3 && cantidadPersonas <= 5) {
+            return "3-5 personas";
+        } else if (cantidadPersonas >= 6 && cantidadPersonas <= 10) {
+            return "6-10 personas";
+        } else if (cantidadPersonas >= 11 && cantidadPersonas <= 15) {
+            return "11-15 personas";
+        }
+        return null;
     }
 }

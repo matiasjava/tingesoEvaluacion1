@@ -1,67 +1,66 @@
-import React, { useState } from 'react';
-import { generarReporteIngresos } from '../../services/ReportsService';
+import React, { useState, useEffect } from 'react';
+import { fetchReporteIngresos, fetchReporteParticipantes } from '../../services/ReportsService';
 import ReportTable from '../../components/ReportTable';
-import { TextField, Button, Box } from '@mui/material';
-import dayjs from 'dayjs';
-import './Reports.css'; // Asegúrate de importar el archivo CSS
 
-const ReportView = () => {
-  const [mesInicio, setMesInicio] = useState('');
-  const [mesFin, setMesFin] = useState('');
-  const [reporte, setReporte] = useState(null);
+const Reports = () => {
+    const [reporte, setReporte] = useState(null);
+    const [reporteParticipantes, setReporteParticipantes] = useState(null);
+    const [fechaInicio, setFechaInicio] = useState('2025-01-01');
+    const [fechaFin, setFechaFin] = useState('2025-03-31');
 
-  const handleGenerateReport = () => {
-    const reservas = [
-      { fecha_reserva: '2024-01-15', tipo_duracion: '10 vueltas o máx 10 min' },
-      { fecha_reserva: '2024-01-20', tipo_duracion: '15 vueltas o máx 15 min' },
-      { fecha_reserva: '2024-02-10', tipo_duracion: '20 vueltas o máx 20 min' },
-      { fecha_reserva: '2024-02-15', tipo_duracion: '15 vueltas o máx 15 min' },
-      { fecha_reserva: '2024-03-05', tipo_duracion: '10 vueltas o máx 10 min' },
-    ];
+    const fetchReporte = async () => {
+        try {
+            const data = await fetchReporteIngresos(fechaInicio, fechaFin);
+            setReporte(data);
+        } catch (error) {
+            console.error('Error al obtener el reporte de ingresos:', error);
+        }
+    };
 
-    if (!mesInicio || !mesFin) {
-      alert('Por favor, selecciona ambos meses.');
-      return;
-    }
+    const fetchReporteParticipantesData = async () => {
+        try {
+            const data = await fetchReporteParticipantes(fechaInicio, fechaFin);
+            setReporteParticipantes(data);
+        } catch (error) {
+            console.error('Error al obtener el reporte de participantes:', error);
+        }
+    };
 
-    const fechaInicio = dayjs(mesInicio).startOf('month').format('YYYY-MM-DD');
-    const fechaFin = dayjs(mesFin).endOf('month').format('YYYY-MM-DD');
+    useEffect(() => {
+        fetchReporte();
+        fetchReporteParticipantesData();
+    }, [fechaInicio, fechaFin]);
 
-    const reporteGenerado = generarReporteIngresos(reservas, fechaInicio, fechaFin);
-    setReporte(reporteGenerado);
-  };
-
-  return (
-    <div className="reports-page">
-      <h1>Reporte de Ingresos</h1>
-
-      <Box display="flex" gap={2} mb={4}>
-        <TextField
-          label="Mes de inicio"
-          type="month"
-          value={mesInicio}
-          onChange={(e) => setMesInicio(e.target.value)}
-          InputLabelProps={{ shrink: true }}
-        />
-        <TextField
-          label="Mes de fin"
-          type="month"
-          value={mesFin}
-          onChange={(e) => setMesFin(e.target.value)}
-          InputLabelProps={{ shrink: true }}
-        />
-        <Button variant="contained" color="primary" onClick={handleGenerateReport}>
-          Generar Reporte
-        </Button>
-      </Box>
-
-      {reporte ? (
-        <ReportTable ingresosPorMes={reporte.ingresosPorMes} totalGeneral={reporte.totalGeneral} />
-      ) : (
-        <p>Selecciona un rango de meses y genera el reporte.</p>
-      )}
-    </div>
-  );
+    return (
+        <div style={{ backgroundColor: 'white', padding: '20px' }}>
+            <h1>Reporte de Ingresos</h1>
+            <div>
+                <label>Fecha Inicio:</label>
+                <input
+                    type="date"
+                    value={fechaInicio}
+                    onChange={(e) => setFechaInicio(e.target.value)}
+                />
+                <label>Fecha Fin:</label>
+                <input
+                    type="date"
+                    value={fechaFin}
+                    onChange={(e) => setFechaFin(e.target.value)}
+                />
+            </div>
+            {reporte ? (
+                <ReportTable reporte={reporte} />
+            ) : (
+                <p>No hay datos disponibles para el rango de fechas seleccionado.</p>
+            )}
+            <h2>Reporte de Participantes</h2>
+            {reporteParticipantes ? (
+                <ReportTable reporte={reporteParticipantes} />
+            ) : (
+                <p>No hay datos disponibles para la cantidad de participantes en el rango de fechas seleccionado.</p>
+            )}
+        </div>
+    );
 };
 
-export default ReportView;
+export default Reports;

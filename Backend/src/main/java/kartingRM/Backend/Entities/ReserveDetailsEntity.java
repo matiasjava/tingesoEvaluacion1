@@ -12,6 +12,8 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 @Entity
 @Table(name = "reserve_details")
 @Data
@@ -33,10 +35,21 @@ public class ReserveDetailsEntity {
     private double discount;
 
     @ManyToOne
-    @JoinColumn(name = "reserve_id", nullable = false)
+    @JoinColumn(name = "reserve_id")
+    @JsonBackReference
     private ReserveEntity reserve;
 
     @Column(name = "user_id", nullable = false)
     private Long userId;
+
+    @Override
+    public String toString() {
+        return "ReserveDetailsEntity{" +
+                "id=" + id +
+                ", memberName='" + memberName + '\'' +
+                ", montoFinal=" + montoFinal +
+                ", discount=" + discount +
+                '}';
+    }
 }
 

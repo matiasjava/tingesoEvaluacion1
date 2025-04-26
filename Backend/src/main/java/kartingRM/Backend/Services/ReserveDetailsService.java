@@ -43,18 +43,4 @@ public class ReserveDetailsService {
     public void deleteReserveDetail(Long id) {
         reserveDetailsRepository.deleteById(id);
     }
-
-    // Calcular descuento por cliente frecuente
-    public double calcularDescuentoFrecuente(String categoriaFrecuencia) {
-        switch (categoriaFrecuencia) {
-            case "Muy frecuente":
-                return 0.30; // 30%
-            case "Frecuente":
-                return 0.20; // 20%
-            case "Regular":
-                return 0.10; // 10%
-            default:
-                return 0.0; // 0%
-        }
-    }
 }
