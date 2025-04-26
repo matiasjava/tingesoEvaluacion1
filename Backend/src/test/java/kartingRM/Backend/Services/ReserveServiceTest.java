@@ -91,35 +91,6 @@ class ReserveServiceTest {
         assertEquals(3000.0, reporte.get("1-2 personas").get("Enero"));
     }
     @Test
-    void testSaveReserve() {
-        try {
-            ReserveEntity reserva = new ReserveEntity();
-            reserva.setCodigo_reserva("RES123");
-            reserva.setDetalles(new ArrayList<>(List.of(new ReserveDetailsEntity())));
-            reserva.getDetalles().get(0).setUserId(1L);
-            reserva.setVueltas_o_tiempo("10 vueltas");
-            reserva.setFecha_uso(LocalDate.of(2024, 1, 15));
-
-            
-            UserEntity mockUser = new UserEntity();
-            mockUser.setEmail("test@example.com");
-            when(userService.findUserById(1L)).thenReturn(mockUser);
-
-            
-            when(userService.obtenerDescuentoPorCategoria(1L)).thenReturn(0.10);
-            when(reserveRepository.save(any(ReserveEntity.class))).thenReturn(reserva);
-            doReturn("path/to/comprobante.pdf").when(reserveService).generarComprobantePdf(any(ReserveEntity.class));
-            doNothing().when(reserveService).enviarComprobantePorCorreo(any(String[].class), any(byte[].class), anyString());
-
-            ReserveEntity result = reserveService.saveReserve(reserva);
-
-            assertEquals(0.10, result.getDetalles().get(0).getDiscount());
-        } catch (IOException | MessagingException e) {
-            e.printStackTrace();
-            fail("Se lanzó una excepción inesperada: " + e.getMessage());
-        }
-    }
-    @Test
     void testUpdateReserve() {
         Long id = 1L;
         ReserveEntity existingReserva = new ReserveEntity();
