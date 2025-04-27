@@ -3,6 +3,9 @@ pipeline {
     tools {
         maven "maven"
     }
+    environment {
+        DOCKER_CONTEXT = 'default' 
+    }
     stages {
         stage("Build JAR File") {
             steps {
@@ -23,9 +26,9 @@ pipeline {
             steps {
                 dir("Backend") {
                     script {
-                        docker.withRegistry('https://index.docker.io/v1/', 'docker-credentials') {
-                            def image = docker.build("matiasvejar/kartingrm-backend")
-                            image.push()
+                        withDockerRegistry(credentialsId: 'docker-credentials') {
+                            bat "docker build -t matiasvejar/kartingrm-backend ."
+                            bat "docker push matiasvejar/kartingrm-backend"
                         }
                     }
                 }
