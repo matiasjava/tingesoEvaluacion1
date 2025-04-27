@@ -1,34 +1,33 @@
-pipeline{
+pipeline {
     agent any
-    tools{
+    tools {
         maven "maven"
-
     }
-    stages{
-        stage("Build JAR File"){
-            steps{
+    stages {
+        stage("Build JAR File") {
+            steps {
                 checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/matiasjava/tingesoEvaluacion1']])
-                dir("Backend"){
+                dir("Backend") {
                     bat "mvn clean install"
                 }
             }
         }
-        stage("Test"){
-            steps{
-                dir("Backend"){
+        stage("Test") {
+            steps {
+                dir("Backend") {
                     bat "mvn test"
                 }
             }
-        }        
-        stage("Build and Push Docker Image"){
-            steps{
-                dir("Backend"){
-                    script{
-                         withDockerRegistry(credentialsId: 'docker-credentials'){
-                            bat "docker build -t matiasvejar/kartingrm-backend ."
-                            bat "docker push matiasvejar/kartingrm-backend"
+        }
+        stage("Build and Push Docker Image") {
+            steps {
+                dir("Backend") {
+                    script {
+                        docker.withRegistry('', 'docker-credentials') {
+                            def image = docker.build("matiasvejar/kartingrm-backend")
+                            image.push()
                         }
-                    }                    
+                    }
                 }
             }
         }
