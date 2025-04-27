@@ -35,7 +35,7 @@ services:
     ports:
       - 8091:8090
     environment:
-      DB_HOST: 192.168.1.6
+      DB_HOST: kartingrm-db.postgres.database.azure.com
       
     networks:
       - kartingrm-network
@@ -48,7 +48,7 @@ services:
     ports:
       - 8092:8090
     environment:
-      DB_HOST: 192.168.1.6
+      DB_HOST: kartingrm-db.postgres.database.azure.com
     networks:
       - kartingrm-network
     deploy:
@@ -60,7 +60,7 @@ services:
     ports:
       - 8093:8090
     environment:
-      DB_HOST: 192.168.1.6
+      DB_HOST: kartingrm-db.postgres.database.azure.com
     networks:
       - kartingrm-network
     deploy:
