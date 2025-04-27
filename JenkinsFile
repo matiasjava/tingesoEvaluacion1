@@ -23,7 +23,7 @@ pipeline {
             steps {
                 dir("Backend") {
                     script {
-                        docker.withRegistry('', 'docker-credentials') {
+                        docker.withRegistry('https://index.docker.io/v1/', 'docker-credentials') {
                             def image = docker.build("matiasvejar/kartingrm-backend")
                             image.push()
                         }
