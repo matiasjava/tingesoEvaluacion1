@@ -101,4 +101,17 @@ class ReserveDetailsServiceTest {
 
         verify(reserveDetailsRepository, times(1)).deleteById(id);
     }
+    @Test
+    void testGetReserveDetailByIdNotFound() {
+        Long id = 1L;
+
+        when(reserveDetailsRepository.findById(id)).thenReturn(Optional.empty());
+
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            reserveDetailsService.getReserveDetailById(id);
+        });
+
+        assertEquals("Detalle de reserva no encontrado con ID: " + id, exception.getMessage());
+        verify(reserveDetailsRepository, times(1)).findById(id);
+    }
 }

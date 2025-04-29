@@ -19,12 +19,17 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -90,6 +95,197 @@ class ReserveServiceTest {
 
         assertEquals(3000.0, reporte.get("1-2 personas").get("Enero"));
     }
+    
+    @Test
+    void testEsDiaFeriado() {
+        assertTrue(reserveService.esDiaFeriado(LocalDate.of(2025, 9, 18))); // Fiestas Patrias
+        assertTrue(reserveService.esDiaFeriado(LocalDate.of(2025, 12, 25))); // Navidad
+        assertFalse(reserveService.esDiaFeriado(LocalDate.of(2025, 4, 25))); // Día normal
+    }
+
+    @Test
+    void testEsFinDeSemana() {
+        assertTrue(reserveService.esFinDeSemana(LocalDate.of(2025, 4, 26))); // Sábado
+        assertTrue(reserveService.esFinDeSemana(LocalDate.of(2025, 4, 27))); // Domingo
+        assertFalse(reserveService.esFinDeSemana(LocalDate.of(2025, 4, 28))); // Lunes
+    }
+
+    @Test
+    void testGetRangoPorCantidadDePersonas() {
+        assertEquals("1-2 personas", reserveService.getRangoPorCantidadDePersonas(1));
+        assertEquals("1-2 personas", reserveService.getRangoPorCantidadDePersonas(2));
+        assertEquals("3-5 personas", reserveService.getRangoPorCantidadDePersonas(3));
+        assertEquals("3-5 personas", reserveService.getRangoPorCantidadDePersonas(5));
+        assertEquals("6-10 personas", reserveService.getRangoPorCantidadDePersonas(6));
+        assertEquals("6-10 personas", reserveService.getRangoPorCantidadDePersonas(10));
+        assertEquals("11-15 personas", reserveService.getRangoPorCantidadDePersonas(11));
+        assertEquals("11-15 personas", reserveService.getRangoPorCantidadDePersonas(15));
+        assertNull(reserveService.getRangoPorCantidadDePersonas(16)); // Caso fuera de rango
+        assertNull(reserveService.getRangoPorCantidadDePersonas(0));  // Caso fuera de rango
+    }
+
+    @Test
+    void testUpdateReserveNotFound() {
+        Long id = 1L;
+        ReserveEntity updatedReserva = new ReserveEntity();
+        updatedReserva.setMontoFinal(6000.0);
+
+        when(reserveRepository.findById(id)).thenReturn(Optional.empty());
+
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            reserveService.updateReserve(id, updatedReserva);
+        });
+
+        assertEquals("Reserva no encontrada con ID: " + id, exception.getMessage());
+        verify(reserveRepository, times(1)).findById(id);
+    }
+
+    @Test
+    void testGenerarComprobantePdf() {
+        try {
+            ReserveEntity reserva = new ReserveEntity();
+            reserva.setCodigo_reserva("RES123");
+            reserva.setFecha_uso(LocalDate.of(2025, 4, 25));
+            reserva.setCantidad_personas(3);
+
+            ReserveDetailsEntity detalle = new ReserveDetailsEntity();
+            detalle.setMemberName("Juan");
+            detalle.setMontoFinal(10000.0);
+            detalle.setDiscount(0.10);
+
+            reserva.setDetalles(List.of(detalle));
+
+            byte[] pdfBytes = reserveService.generarComprobantePdf(reserva);
+
+            assertNotNull(pdfBytes);
+            assertTrue(pdfBytes.length > 0);
+        } catch (IOException e) {
+            fail("Se lanzó una excepción inesperada: " + e.getMessage());
+        }
+    }
+
+    @Test
+    void testEnviarComprobantePorCorreo() {
+        try {
+            String[] destinatarios = {"test@example.com"};
+            byte[] pdfBytes = new byte[10];
+            String reserveCode = "RES123";
+
+            MimeMessage mimeMessage = Mockito.mock(MimeMessage.class);
+            when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
+
+            doNothing().when(mailSender).send(any(MimeMessage.class));
+
+            reserveService.enviarComprobantePorCorreo(destinatarios, pdfBytes, reserveCode);
+
+            verify(mailSender, times(1)).send(any(MimeMessage.class));
+        } catch (MessagingException e) {
+            fail("Se lanzó una excepción inesperada: " + e.getMessage());
+        }
+    }
+
+    @Test
+    void testSaveReserveConDescuentos() {
+        ReserveEntity reserva = new ReserveEntity();
+        reserva.setCodigo_reserva("RES123");
+        reserva.setFecha_uso(LocalDate.of(2025, 4, 25));
+        reserva.setCantidad_personas(5);
+        reserva.setVueltas_o_tiempo("10 vueltas");
+
+        ReserveDetailsEntity detalle1 = new ReserveDetailsEntity();
+        detalle1.setMemberName("Juan");
+        detalle1.setDateBirthday(LocalDate.of(2025, 4, 25));
+        detalle1.setMontoFinal(10000.0);
+        detalle1.setUserId(1L);
+
+        ReserveDetailsEntity detalle2 = new ReserveDetailsEntity();
+        detalle2.setMemberName("Pedro");
+        detalle2.setDateBirthday(LocalDate.of(1990, 1, 1));
+        detalle2.setMontoFinal(15000.0);
+        detalle2.setUserId(2L);
+
+        reserva.setDetalles(List.of(detalle1, detalle2));
+
+        UserEntity user1 = new UserEntity();
+        user1.setEmail("juan@example.com");
+
+        UserEntity user2 = new UserEntity();
+        user2.setEmail("pedro@example.com");
+
+        when(userService.obtenerDescuentoPorCategoria(anyLong())).thenReturn(0.10);
+        when(userService.findUserById(1L)).thenReturn(user1);
+        when(userService.findUserById(2L)).thenReturn(user2);
+        when(reserveRepository.save(any(ReserveEntity.class))).thenReturn(reserva);
+
+        // Mock del MimeMessage
+        MimeMessage mimeMessage = Mockito.mock(MimeMessage.class);
+        when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
+
+        doNothing().when(mailSender).send(any(MimeMessage.class));
+
+        ReserveEntity result = reserveService.saveReserve(reserva);
+
+        assertNotNull(result);
+        assertEquals(2, result.getDetalles().size());
+        verify(reserveRepository, times(1)).save(reserva);
+        verify(mailSender, times(1)).send(any(MimeMessage.class));
+    }
+    @Test
+    void testSaveReserveNormal() {
+        ReserveEntity reserva = new ReserveEntity();
+        reserva.setCodigo_reserva("RES456");
+        reserva.setFecha_uso(LocalDate.of(2025, 5, 15));
+        reserva.setCantidad_personas(3);
+        reserva.setVueltas_o_tiempo("15 vueltas");
+
+        ReserveDetailsEntity detalle = new ReserveDetailsEntity();
+        detalle.setMemberName("Carlos");
+        detalle.setDateBirthday(LocalDate.of(1990, 6, 10));
+        detalle.setMontoFinal(20000.0);
+        detalle.setUserId(1L); // Asegúrate de configurar el userId
+
+        reserva.setDetalles(List.of(detalle));
+
+        // Mock del UserEntity
+        UserEntity user = new UserEntity();
+        user.setEmail("carlos@example.com");
+
+        // Configurar los mocks
+        when(userService.findUserById(1L)).thenReturn(user);
+        when(reserveRepository.save(any(ReserveEntity.class))).thenReturn(reserva);
+
+        // Mock del MimeMessage
+        MimeMessage mimeMessage = Mockito.mock(MimeMessage.class);
+        when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
+
+        doNothing().when(mailSender).send(any(MimeMessage.class));
+
+        ReserveEntity result = reserveService.saveReserve(reserva);
+
+        // Verificaciones
+        assertNotNull(result);
+        assertEquals("RES456", result.getCodigo_reserva());
+        assertEquals(1, result.getDetalles().size());
+        assertEquals("Carlos", result.getDetalles().get(0).getMemberName());
+        verify(userService, times(1)).findUserById(1L);
+        verify(reserveRepository, times(1)).save(reserva);
+        verify(mailSender, times(1)).send(any(MimeMessage.class));
+    }
+
+    @Test
+    void testGetReserveByIdNotFound() {
+        Long id = 1L;
+
+        when(reserveRepository.findById(id)).thenReturn(Optional.empty());
+
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            reserveService.getReserveById(id);
+        });
+
+        assertEquals("Reserva no encontrada con ID: " + id, exception.getMessage());
+        verify(reserveRepository, times(1)).findById(id);
+    }
+
     @Test
     void testUpdateReserve() {
         Long id = 1L;

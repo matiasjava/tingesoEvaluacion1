@@ -106,14 +106,22 @@ class UserServiceTest {
     void testObtenerDescuentoPorCategoria() {
         Long userId = 1L;
         UserEntity user = new UserEntity();
+
         user.setCategory_frecuency("Muy frecuente");
-
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        assertEquals(0.20, userService.obtenerDescuentoPorCategoria(userId));
 
-        double descuento = userService.obtenerDescuentoPorCategoria(userId);
+        user.setCategory_frecuency("Frecuente");
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        assertEquals(0.10, userService.obtenerDescuentoPorCategoria(userId));
 
-        assertEquals(0.20, descuento);
-        verify(userRepository, times(1)).findById(userId);
+        user.setCategory_frecuency("Regular");
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        assertEquals(0.05, userService.obtenerDescuentoPorCategoria(userId));
+
+        user.setCategory_frecuency("No frecuente");
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        assertEquals(0.0, userService.obtenerDescuentoPorCategoria(userId));
     }
 
     @Test
@@ -145,6 +153,84 @@ class UserServiceTest {
     }
 
     @Test
+    void testUpdateNumberVisitsUsuarioNoEncontrado() {
+        Long userId = 1L;
+
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            userService.updateNumberVisits(userId, 5);
+        });
+
+        assertEquals("Usuario no encontrado con ID: " + userId, exception.getMessage());
+        verify(userRepository, times(1)).findById(userId);
+    }
+
+    @Test
+    void testIncrementVisitsAndUpdateCategoryUsuarioNoEncontrado() {
+        Long userId = 1L;
+
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            userService.incrementVisitsAndUpdateCategory(userId);
+        });
+
+        assertEquals("Usuario no encontrado con ID: " + userId, exception.getMessage());
+        verify(userRepository, times(1)).findById(userId);
+    }
+
+    @Test
+    void testObtenerCategoriaClienteUsuarioNoEncontrado() {
+        Long userId = 1L;
+
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            userService.obtenerCategoriaCliente(userId);
+        });
+
+        assertEquals("Usuario no encontrado con ID: " + userId, exception.getMessage());
+        verify(userRepository, times(1)).findById(userId);
+    }
+
+    @Test
+    void testObtenerCategoriaClienteConDiferentesCategorias() {
+        Long userId = 1L;
+        UserEntity user = new UserEntity();
+
+        user.setNumberVisits(8);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        assertEquals("Muy frecuente", userService.obtenerCategoriaCliente(userId));
+
+        user.setNumberVisits(6);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        assertEquals("Frecuente", userService.obtenerCategoriaCliente(userId));
+
+        user.setNumberVisits(3);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        assertEquals("Regular", userService.obtenerCategoriaCliente(userId));
+
+        user.setNumberVisits(1);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        assertEquals("No frecuente", userService.obtenerCategoriaCliente(userId));
+    }
+
+    @Test
+    void testFindUserByIdUsuarioNoEncontrado() {
+        Long userId = 1L;
+
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            userService.findUserById(userId);
+        });
+
+        assertEquals("Usuario no encontrado con ID: " + userId, exception.getMessage());
+        verify(userRepository, times(1)).findById(userId);
+    }
+
+    @Test
     void testUpdateCategoryFrequency() {
         Long userId = 1L;
         UserEntity user = new UserEntity();
@@ -161,6 +247,32 @@ class UserServiceTest {
     }
 
     @Test
+    void testUpdateCategoryFrequencyConDiferentesCategorias() {
+        Long userId = 1L;
+        UserEntity user = new UserEntity();
+
+        user.setNumberVisits(8);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        userService.updateCategoryFrequency(userId);
+        assertEquals("Muy frecuente", user.getCategory_frecuency());
+
+        user.setNumberVisits(6);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        userService.updateCategoryFrequency(userId);
+        assertEquals("Frecuente", user.getCategory_frecuency());
+
+        user.setNumberVisits(3);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        userService.updateCategoryFrequency(userId);
+        assertEquals("Regular", user.getCategory_frecuency());
+
+        user.setNumberVisits(1);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        userService.updateCategoryFrequency(userId);
+        assertEquals("No frecuente", user.getCategory_frecuency());
+    }
+
+    @Test
     void testUpdateNumberVisits() {
         Long userId = 1L;
         UserEntity user = new UserEntity();
@@ -174,6 +286,20 @@ class UserServiceTest {
         assertEquals("Muy frecuente", result.getCategory_frecuency());
         verify(userRepository, times(1)).findById(userId);
         verify(userRepository, times(1)).save(user);
+    }
+
+    @Test
+    void testUpdateCategoryFrequencyUsuarioNoEncontrado() {
+        Long userId = 1L;
+
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            userService.updateCategoryFrequency(userId);
+        });
+
+        assertEquals("Usuario no encontrado con ID: " + userId, exception.getMessage());
+        verify(userRepository, times(1)).findById(userId);
     }
 
     @Test

@@ -264,12 +264,12 @@ public class ReserveService {
         reserveRepository.deleteById(id);
     }
 
-    private boolean esFinDeSemana(LocalDate fecha) {
+    public boolean esFinDeSemana(LocalDate fecha) {
         DayOfWeek dia = fecha.getDayOfWeek();
         return dia == DayOfWeek.SATURDAY || dia == DayOfWeek.SUNDAY;
     }
 
-    private boolean esDiaFeriado(LocalDate fecha) {
+    public boolean esDiaFeriado(LocalDate fecha) {
         Set<LocalDate> diasFeriados = Set.of(
             LocalDate.of(2025, 9, 18), // Fiestas Patrias
             LocalDate.of(2025, 12, 25) // Navidad
