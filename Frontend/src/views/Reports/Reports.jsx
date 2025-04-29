@@ -33,7 +33,6 @@ const Reports = () => {
 
     return (
         <div style={{ backgroundColor: 'white', padding: '20px' }}>
-            <h1>Reporte de Ingresos</h1>
             <div>
                 <label>Fecha Inicio:</label>
                 <input
@@ -47,6 +46,7 @@ const Reports = () => {
                     value={fechaFin}
                     onChange={(e) => setFechaFin(e.target.value)}
                 />
+                <h1>Reporte de Ingresos</h1>
             </div>
             {reporte ? (
                 <ReportTable reporte={reporte} />
