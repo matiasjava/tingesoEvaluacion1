@@ -120,7 +120,7 @@ const calculateAvailableTimes = () => {
   return (
     <Box className="home-container">
       <Typography variant="h4" className="title">
-        Disfruta de la mejor experiencia - KartingRM
+        Disfruta de la mejor experiencia en Chile - KartingRM
       </Typography>
 
       <Box display="flex" justifyContent="space-between" alignItems="flex-start" mt={4}>
